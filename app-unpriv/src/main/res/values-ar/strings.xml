@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_eyebrow">شريحة eSIM الخاصة بي</string>
+    <string name="home_heading">ملفات التعريف</string>
+    <string name="empty_heading">لم يتم العثور على eSIM يمكن الوصول إليها</string>
+    <string name="empty_hint">أدخل شريحة eSIM قابلة للإزالة ومتوافقة، أو صِل قارئ USB CCID. تحقق من التوافق لمعرفة ما يدعمه هذا الجهاز.</string>
+    <string name="empty_profiles_heading">جاهز لإضافة أول ملف تعريف</string>
+    <string name="empty_profiles_hint">استخدم إضافة eSIM لمسح رمز QR أو إدخال رمز التفعيل.</string>
+    <string name="home_add_profile">إضافة eSIM</string>
+    <string name="profile_actions">إجراءات ملف التعريف</string>
+    <string name="compatibility_check">التحقق من التوافق</string>
+    <string name="open_sim_toolkit">فتح أدوات SIM</string>
+    <string name="shortcut_sim_toolkit">أدوات SIM</string>
+    <string name="shortcut_sim_toolkit_with_slot">أدوات SIM رقم %d</string>
+    <string name="toast_ara_m_copied">تم نسخ ARA-M SHA-1 إلى الحافظة</string>
+    <string name="toast_prompt_to_enable_sim_toolkit">يرجى تفعيل تطبيق \"%s\"</string>
+    <string name="quick_compatibility">فحص توافق سريع</string>
+    <string name="quick_compatibility_unconfirmed">تم اكتشاف فتحة SIM، لكن لم يتم تأكيد الوصول إلى البطاقات المتوافقة مع %s</string>
+    <string name="quick_compatibility_check_omapi">خدمة Android OMAPI</string>
+    <string name="quick_compatibility_check_sim_slot">قارئ فتحة SIM</string>
+    <string name="quick_compatibility_check_isdr">قناة ISD-R</string>
+    <string name="quick_compatibility_check_usb_host">استضافة قارئ USB (اختياري)</string>
+    <string name="quick_compatibility_check_ara_m">تفويض ARA-M للبطاقة</string>
+    <string name="quick_compatibility_check_explanation">يعرض هذا الفحص واجهات الجهاز المكتشفة. يلزم استخدام شريحة eSIM فعلية للتحقق من تفويض ARA-M وعمليات ملفات التعريف.</string>
+    <string name="quick_compatibility_status_supported">مدعوم</string>
+    <string name="quick_compatibility_status_not_detected">لم يتم الاكتشاف</string>
+    <string name="quick_compatibility_status_not_verified">يلزم التحقق ببطاقة فعلية</string>
+    <string name="quick_compatibility_compatible">يمكن لهاتفك إدارة البطاقات المتوافقة مع %s</string>
+    <string name="quick_compatibility_not_compatible">هاتفك غير متوافق مع %s</string>
+    <string name="quick_compatibility_not_compatible_but_usb">هاتفك غير متوافق تمامًا مع %s. لكن لا يزال بإمكانك استخدام قارئ بطاقات ذكية عبر USB للاستفادة من معظم الوظائف.</string>
+    <string name="quick_compatibility_result_slots">الفتحات التي يمكن الوصول إليها: %s</string>
+    <string name="quick_compatibility_result_slots_isdr">الوصول إلى ISD-R: %s</string>
+    <string name="quick_compatibility_result_notes">ملاحظة: هذه النتائج للاسترشاد فقط. حتى إذا لم تظهر فتحة SIM أعلاه، فقد تصبح متوافقة بعد إدخال بطاقة SIM.</string>
+    <string name="quick_compatibility_result_notes_incompatible">ملاحظة: إذا لم تكن هناك بطاقة SIM داخل الهاتف الآن، فأعد فحص التوافق بعد إدخال واحدة. يمكن استخدام أي بطاقة SIM.</string>
+    <string name="quick_compatibility_button_continue">متابعة</string>
+    <string name="quick_compatibility_skip">عدم إظهار هذه الرسالة مرة أخرى</string>
+    <string name="quick_compatibility_unknown">غير معروف</string>
+</resources>

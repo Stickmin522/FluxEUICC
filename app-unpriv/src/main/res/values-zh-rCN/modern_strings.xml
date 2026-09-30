@@ -1,0 +1,10 @@
+<resources>
+    <string name="home_eyebrow">我的eSIM</string>
+    <string name="home_heading">套餐</string>
+    <string name="empty_heading">未找到可访问的 eSIM</string>
+    <string name="empty_hint">请插入兼容的可拆卸 eSIM，或连接 USB CCID 读卡器。可通过兼容性检查了解设备支持情况。</string>
+    <string name="empty_profiles_heading">还没有套餐</string>
+    <string name="empty_profiles_hint">点按“添加 eSIM”，扫描二维码或输入激活码。</string>
+    <string name="home_add_profile">添加 eSIM</string>
+    <string name="profile_actions">套餐操作</string>
+</resources>

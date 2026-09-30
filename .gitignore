@@ -1,0 +1,18 @@
+/.gradle
+/captures
+/build
+
+# Configuration files
+
+/keystore.properties
+/local.properties
+
+# macOS
+
+.DS_Store
+
+# Local IDE state and signing keys
+/.idea/
+/.kotlin/
+*.jks
+*.keystore

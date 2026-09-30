@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_eyebrow">Meine eSIM</string>
+    <string name="home_heading">Profile</string>
+    <string name="empty_heading">Keine zugängliche eSIM gefunden</string>
+    <string name="empty_hint">Legen Sie eine kompatible entnehmbare eSIM ein oder schließen Sie ein USB-CCID-Lesegerät an. Prüfen Sie die Geräteunterstützung mit der Kompatibilitätsprüfung.</string>
+    <string name="empty_profiles_heading">Bereit für Ihr erstes Profil</string>
+    <string name="empty_profiles_hint">Wählen Sie eSIM hinzufügen, um einen QR-Code zu scannen oder einen Aktivierungscode einzugeben.</string>
+    <string name="home_add_profile">eSIM hinzufügen</string>
+    <string name="profile_actions">Profilaktionen</string>
+    <string name="compatibility_check">Kompatibilität prüfen</string>
+    <string name="open_sim_toolkit">SIM-Toolkit öffnen</string>
+    <string name="shortcut_sim_toolkit">SIM-Toolkit</string>
+    <string name="shortcut_sim_toolkit_with_slot">SIM-Toolkit Nr. %d</string>
+    <string name="toast_ara_m_copied">ARA-M-SHA-1 in die Zwischenablage kopiert</string>
+    <string name="toast_prompt_to_enable_sim_toolkit">Bitte aktivieren Sie die App „%s“</string>
+    <string name="quick_compatibility">Schnelle Kompatibilitätsprüfung</string>
+    <string name="quick_compatibility_unconfirmed">SIM-Steckplatz erkannt, aber der Zugriff auf mit %s kompatible Karten wurde nicht bestätigt</string>
+    <string name="quick_compatibility_check_omapi">Android-OMAPI-Dienst</string>
+    <string name="quick_compatibility_check_sim_slot">SIM-Steckplatzleser</string>
+    <string name="quick_compatibility_check_isdr">ISD-R-Kanal</string>
+    <string name="quick_compatibility_check_usb_host">USB-Lesegerät als Host (optional)</string>
+    <string name="quick_compatibility_check_ara_m">ARA-M-Berechtigung der Karte</string>
+    <string name="quick_compatibility_check_explanation">Diese Prüfung zeigt erkannte Geräteschnittstellen. Die ARA-M-Berechtigung und Profilvorgänge müssen mit einer echten eSIM geprüft werden.</string>
+    <string name="quick_compatibility_status_supported">Unterstützt</string>
+    <string name="quick_compatibility_status_not_detected">Nicht erkannt</string>
+    <string name="quick_compatibility_status_not_verified">Mit echter Karte prüfen</string>
+    <string name="quick_compatibility_compatible">Ihr Smartphone kann mit %s kompatible Karten verwalten</string>
+    <string name="quick_compatibility_not_compatible">Ihr Smartphone ist nicht mit %s kompatibel</string>
+    <string name="quick_compatibility_not_compatible_but_usb">Ihr Smartphone ist nicht vollständig mit %s kompatibel. Mit einem USB-Smartcard-Lesegerät können Sie jedoch fast alle Funktionen nutzen.</string>
+    <string name="quick_compatibility_result_slots">Zugängliche Steckplätze: %s</string>
+    <string name="quick_compatibility_result_slots_isdr">ISD-R-Zugriff: %s</string>
+    <string name="quick_compatibility_result_notes">Hinweis: Diese Ergebnisse dienen nur zur Orientierung. Auch ein oben nicht aufgeführter SIM-Steckplatz kann nach Einlegen einer SIM-Karte kompatibel sein.</string>
+    <string name="quick_compatibility_result_notes_incompatible">Hinweis: Wenn derzeit keine SIM-Karte eingelegt ist, prüfen Sie die Kompatibilität nach dem Einlegen erneut. Jede SIM-Karte genügt.</string>
+    <string name="quick_compatibility_button_continue">Weiter</string>
+    <string name="quick_compatibility_skip">Diese Meldung nicht erneut anzeigen</string>
+    <string name="quick_compatibility_unknown">Unbekannt</string>
+</resources>

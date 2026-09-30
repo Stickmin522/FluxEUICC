@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name" translatable="false">FluxEUICC</string>
+    <string name="home_eyebrow">My eSIM</string>
+    <string name="home_heading">Profiles</string>
+    <string name="empty_heading">No accessible eSIM found</string>
+    <string name="empty_hint">Insert a compatible removable eSIM, or connect a USB CCID reader. Check access to see what this device supports.</string>
+    <string name="empty_profiles_heading">Ready for your first profile</string>
+    <string name="empty_profiles_hint">Use Add eSIM to scan a QR code or enter an activation code.</string>
+    <string name="home_add_profile">Add eSIM</string>
+    <string name="profile_actions">Profile actions</string>
+    <string name="channel_name_format_unpriv" translatable="false">SIM %d</string>
+    <string name="channel_name_format_unpriv_se" translatable="false">SIM %d, SE %d</string>
+    <string name="compatibility_check">Compatibility Check</string>
+    <string name="open_sim_toolkit">Open SIM Toolkit</string>
+    <string name="shortcut_sim_toolkit">SIM Toolkit</string>
+    <string name="shortcut_sim_toolkit_with_slot">SIM Toolkit #%d</string>
+
+    <!-- Settings -->
+    <string name="pref_developer_ara_m" translatable="false">ARA-M SHA-1</string>
+    <string name="pref_info_website_url" translatable="false">https://easyeuicc.org</string>
+
+    <!-- Toast -->
+    <string name="toast_ara_m_copied">ARA-M SHA-1 copied to clipboard</string>
+    <string name="toast_prompt_to_enable_sim_toolkit">Please ENABLE your \"%s\" application</string>
+
+    <!-- Quick Compatibility -->
+    <string name="quick_compatibility">Quick Compatibility Check</string>
+    <string name="quick_compatibility_unconfirmed">SIM slot detected, but access to %s-compatible cards is not confirmed</string>
+    <string name="quick_compatibility_check_omapi">Android OMAPI service</string>
+    <string name="quick_compatibility_check_sim_slot">SIM-slot reader</string>
+    <string name="quick_compatibility_check_isdr">ISD-R channel</string>
+    <string name="quick_compatibility_check_usb_host">USB reader host (optional)</string>
+    <string name="quick_compatibility_check_ara_m">Card ARA-M authorization</string>
+    <string name="quick_compatibility_check_explanation">This check shows detected device interfaces. Card ARA-M authorization and profile operations need a real eSIM test.</string>
+    <string name="quick_compatibility_status_supported">Supported</string>
+    <string name="quick_compatibility_status_not_detected">Not detected</string>
+    <string name="quick_compatibility_status_not_verified">Needs card test</string>
+    <string name="quick_compatibility_compatible">Your smartphone can manage %s-compatible cards</string>
+    <string name="quick_compatibility_not_compatible">Your smartphone is not compatible with %s</string>
+    <string name="quick_compatibility_not_compatible_but_usb">Your smartphone is not fully compatible with %s. However, you can still use a USB smart card reader for near-full functionality.</string>
+    <string name="quick_compatibility_result_slots">Accessible slots: %s</string>
+    <string name="quick_compatibility_result_slots_isdr">ISD-R access: %s</string>
+    <string name="quick_compatibility_result_notes">Note: these results are for reference only. Even if a SIM slot is not listed above, it <i>may</i> be compatible as well once a SIM card is inserted.</string>
+    <string name="quick_compatibility_result_notes_incompatible">Note: if you currently do not have any SIM card inserted, try the compatibility check again after inserting one. Any SIM card will do.</string>
+    <string name="quick_compatibility_button_continue">Continue</string>
+    <string name="quick_compatibility_skip">Don\'t show this message again</string>
+    <string name="quick_compatibility_unknown">Unknown</string>
+</resources>

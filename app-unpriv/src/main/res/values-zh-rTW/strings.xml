@@ -1,0 +1,37 @@
+<resources>
+    <string name="quick_compatibility_unconfirmed">已偵測到 SIM 卡槽，但尚未確認能存取相容 %s 的卡片</string>
+    <string name="quick_compatibility_check_omapi">Android OMAPI 服務</string>
+    <string name="quick_compatibility_check_sim_slot">SIM 卡槽讀卡器</string>
+    <string name="quick_compatibility_check_isdr">ISD-R 通道</string>
+    <string name="quick_compatibility_check_usb_host">USB 讀卡器主機（選用）</string>
+    <string name="quick_compatibility_check_ara_m">卡片 ARA-M 授權</string>
+    <string name="quick_compatibility_check_explanation">此檢查顯示偵測到的裝置介面。卡片 ARA-M 授權及套餐操作仍需使用實體 eSIM 驗證。</string>
+    <string name="quick_compatibility_status_supported">支援</string>
+    <string name="quick_compatibility_status_not_detected">未偵測到</string>
+    <string name="quick_compatibility_status_not_verified">需實卡驗證</string>
+    <string name="home_eyebrow">我的eSIM</string>
+    <string name="home_heading">套餐</string>
+    <string name="empty_heading">找不到可存取的 eSIM</string>
+    <string name="empty_hint">請插入相容的可插拔 eSIM，或連接 USB CCID 讀卡器。可透過相容性檢查了解裝置支援情況。</string>
+    <string name="empty_profiles_heading">準備新增第一個套餐</string>
+    <string name="empty_profiles_hint">點按「新增 eSIM」，掃描 QR 碼或輸入啟用碼。</string>
+    <string name="home_add_profile">新增 eSIM</string>
+    <string name="profile_actions">套餐操作</string>
+    <string name="compatibility_check">相容性檢查</string>
+    <string name="open_sim_toolkit">啟動 STK 選單</string>
+    <string name="toast_ara_m_copied">ARA-M SHA-1 已複製到剪貼簿</string>
+    <string name="toast_prompt_to_enable_sim_toolkit">請啟用您的「%s」應用程式</string>
+    <string name="quick_compatibility">簡易相容性檢測</string>
+    <string name="quick_compatibility_compatible">您的手機可以管理相容 %s 的卡片</string>
+    <string name="quick_compatibility_not_compatible">您的手機與 %s 不相容</string>
+    <string name="quick_compatibility_not_compatible_but_usb">您的手機與 %s 不完全相容，但可以使用 USB 讀卡器獲得幾乎全部功能</string>
+    <string name="quick_compatibility_result_slots">可讀取的卡槽: %s</string>
+    <string name="quick_compatibility_result_slots_isdr">ISD-R 訪問: %s</string>
+    <string name="quick_compatibility_result_notes">注意：以上結果僅供參考。即使某些卡槽沒有被列舉出來，插卡後也可能可用。</string>
+    <string name="quick_compatibility_result_notes_incompatible">注意：如果您目前沒有插卡，請插任何 SIM 卡後重試相容性檢測。</string>
+    <string name="quick_compatibility_button_continue">繼續</string>
+    <string name="quick_compatibility_skip">不再顯示此訊息</string>
+    <string name="quick_compatibility_unknown">未知</string>
+    <string name="shortcut_sim_toolkit">STK 選單</string>
+    <string name="shortcut_sim_toolkit_with_slot">STK 選單 #%d</string>
+</resources>

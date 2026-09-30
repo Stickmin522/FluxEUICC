@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="360" android:viewportHeight="360">
+    <group android:scaleX="0.72" android:scaleY="0.72"
+        android:pivotX="180" android:pivotY="180">
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="14"
+        android:pathData="M129,45h102c21,0 38,17 38,38v194c0,21 -17,38 -38,38H129c-21,0 -38,-17 -38,-38V83c0,-21 17,-38 38,-38Z" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="8"
+        android:strokeLineCap="round"
+        android:pathData="M149,64h62M152,293h56M108,180h25M252,180h-22M180,96v29M180,233v29" />
+    <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
+        android:pathData="M153,128h47l23,23v61c0,7 -6,13 -13,13h-57c-7,0 -13,-6 -13,-13v-71c0,-7 6,-13 13,-13Z M157,162h13q2,0 2,2v15q0,2 -2,2h-13q-2,0 -2,-2v-15q0,-2 2,-2Z M177,162h13q2,0 2,2v15q0,2 -2,2h-13q-2,0 -2,-2v-15q0,-2 2,-2Z M197,162h9q2,0 2,2v15q0,2 -2,2h-9q-2,0 -2,-2v-15q0,-2 2,-2Z M157,184h13q2,0 2,2v17q0,2 -2,2h-13q-2,0 -2,-2v-17q0,-2 2,-2Z M177,184h13q2,0 2,2v17q0,2 -2,2h-13q-2,0 -2,-2v-17q0,-2 2,-2Z M197,184h9q2,0 2,2v17q0,2 -2,2h-9q-2,0 -2,-2v-17q0,-2 2,-2Z" />
+    </group>
+</vector>

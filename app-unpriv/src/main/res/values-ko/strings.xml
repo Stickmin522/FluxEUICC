@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_eyebrow">내 eSIM</string>
+    <string name="home_heading">프로필</string>
+    <string name="empty_heading">접근 가능한 eSIM이 없습니다</string>
+    <string name="empty_hint">호환되는 탈착식 eSIM을 삽입하거나 USB CCID 리더를 연결하세요. 호환성 검사에서 이 기기의 지원 여부를 확인할 수 있습니다.</string>
+    <string name="empty_profiles_heading">첫 프로필을 추가해 보세요</string>
+    <string name="empty_profiles_hint">eSIM 추가를 눌러 QR 코드를 스캔하거나 활성화 코드를 입력하세요.</string>
+    <string name="home_add_profile">eSIM 추가</string>
+    <string name="profile_actions">프로필 작업</string>
+    <string name="compatibility_check">호환성 검사</string>
+    <string name="open_sim_toolkit">SIM 도구 열기</string>
+    <string name="shortcut_sim_toolkit">SIM 도구</string>
+    <string name="shortcut_sim_toolkit_with_slot">SIM 도구 #%d</string>
+    <string name="toast_ara_m_copied">ARA-M SHA-1을 클립보드에 복사했습니다</string>
+    <string name="toast_prompt_to_enable_sim_toolkit">\"%s\" 앱을 활성화하세요</string>
+    <string name="quick_compatibility">빠른 호환성 검사</string>
+    <string name="quick_compatibility_unconfirmed">SIM 슬롯은 감지되었지만 %s 호환 카드에 대한 접근은 확인되지 않았습니다</string>
+    <string name="quick_compatibility_check_omapi">Android OMAPI 서비스</string>
+    <string name="quick_compatibility_check_sim_slot">SIM 슬롯 리더</string>
+    <string name="quick_compatibility_check_isdr">ISD-R 채널</string>
+    <string name="quick_compatibility_check_usb_host">USB 리더 호스트(선택 사항)</string>
+    <string name="quick_compatibility_check_ara_m">카드 ARA-M 권한</string>
+    <string name="quick_compatibility_check_explanation">이 검사는 감지된 기기 인터페이스를 보여줍니다. 카드 ARA-M 권한과 프로필 작업은 실제 eSIM으로 확인해야 합니다.</string>
+    <string name="quick_compatibility_status_supported">지원</string>
+    <string name="quick_compatibility_status_not_detected">감지되지 않음</string>
+    <string name="quick_compatibility_status_not_verified">실제 카드로 확인 필요</string>
+    <string name="quick_compatibility_compatible">이 스마트폰은 %s 호환 카드를 관리할 수 있습니다</string>
+    <string name="quick_compatibility_not_compatible">이 스마트폰은 %s와(과) 호환되지 않습니다</string>
+    <string name="quick_compatibility_not_compatible_but_usb">이 스마트폰은 %s와(과) 완전히 호환되지 않습니다. 하지만 USB 스마트카드 리더를 사용하면 대부분의 기능을 이용할 수 있습니다.</string>
+    <string name="quick_compatibility_result_slots">접근 가능한 슬롯: %s</string>
+    <string name="quick_compatibility_result_slots_isdr">ISD-R 접근: %s</string>
+    <string name="quick_compatibility_result_notes">참고: 이 결과는 참고용입니다. 위에 SIM 슬롯이 표시되지 않더라도 SIM 카드를 삽입하면 호환될 수 있습니다.</string>
+    <string name="quick_compatibility_result_notes_incompatible">참고: 현재 SIM 카드를 삽입하지 않았다면 카드를 삽입한 후 다시 검사하세요. 어떤 SIM 카드든 사용할 수 있습니다.</string>
+    <string name="quick_compatibility_button_continue">계속</string>
+    <string name="quick_compatibility_skip">이 메시지를 다시 표시하지 않기</string>
+    <string name="quick_compatibility_unknown">알 수 없음</string>
+</resources>
