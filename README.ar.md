@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="art/FluxEUICC-icon.png" alt="FluxEUICC" width="112" height="112">
-</p>
-
 # FluxEUICC
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | **العربية** | [Français](README.fr.md) | [Deutsch](README.de.md) | [Español](README.es.md)
@@ -11,6 +7,10 @@
 **أضف ملفات تعريف eSIM وبدّل بينها وأدرها بسهولة.**
 
 FluxEUICC هو تطبيق Android لإدارة بطاقات eSIM القابلة للإزالة، مبني على [OpenEUICC](https://gitea.angry.im/PeterCxy/OpenEUICC). يجمع ملفات التعريف في واجهة واضحة لتنزيلها والتبديل بينها وإدارتها يوميًا، دون الحاجة إلى صلاحيات الجذر (Root).
+
+<p align="center">
+  <img src="art/FluxEUICC-logo.png" alt="FluxEUICC" width="240" height="240">
+</p>
 
 ## لماذا تختار FluxEUICC؟
 

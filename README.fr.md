@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="art/FluxEUICC-icon.png" alt="FluxEUICC" width="112" height="112">
-</p>
-
 # FluxEUICC
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [العربية](README.ar.md) | **Français** | [Deutsch](README.de.md) | [Español](README.es.md)
@@ -9,6 +5,10 @@
 **Ajoutez, changez et gérez vos profils eSIM en toute simplicité.**
 
 FluxEUICC est une application Android de gestion des cartes eSIM amovibles, basée sur [OpenEUICC](https://gitea.angry.im/PeterCxy/OpenEUICC). Elle regroupe vos profils dans une interface claire pour les télécharger, les gérer et passer de l’un à l’autre au quotidien, sans accès root.
+
+<p align="center">
+  <img src="art/FluxEUICC-logo.png" alt="FluxEUICC" width="240" height="240">
+</p>
 
 ## Pourquoi choisir FluxEUICC ?
 

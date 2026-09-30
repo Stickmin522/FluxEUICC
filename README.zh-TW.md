@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="art/FluxEUICC-icon.png" alt="FluxEUICC" width="112" height="112">
-</p>
-
 # FluxEUICC
 
 [English](README.md) | [简体中文](README.zh-CN.md) | **繁體中文** | [日本語](README.ja.md) | [한국어](README.ko.md) | [العربية](README.ar.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | [Español](README.es.md)
@@ -9,6 +5,10 @@
 **輕鬆新增、切換與管理你的 eSIM 方案。**
 
 FluxEUICC 是一款基於 [OpenEUICC](https://gitea.angry.im/PeterCxy/OpenEUICC) 的 Android 可拆卸 eSIM 管理應用程式。它將多個方案集中在清楚的介面中，無須 ROOT，即可完成日常的方案下載、切換與管理。
+
+<p align="center">
+  <img src="art/FluxEUICC-logo.png" alt="FluxEUICC" width="240" height="240">
+</p>
 
 ## 為什麼選擇 FluxEUICC
 

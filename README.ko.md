@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="art/FluxEUICC-icon.png" alt="FluxEUICC" width="112" height="112">
-</p>
-
 # FluxEUICC
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | **한국어** | [العربية](README.ar.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | [Español](README.es.md)
@@ -9,6 +5,10 @@
 **eSIM 프로필을 간편하게 추가하고 전환하며 관리하세요.**
 
 FluxEUICC는 [OpenEUICC](https://gitea.angry.im/PeterCxy/OpenEUICC)를 기반으로 하는 Android용 탈착식 eSIM 카드 관리 앱입니다. 여러 프로필을 보기 쉬운 화면에 모아 루팅 없이 일상적인 다운로드, 전환 및 관리를 할 수 있습니다.
+
+<p align="center">
+  <img src="art/FluxEUICC-logo.png" alt="FluxEUICC" width="240" height="240">
+</p>
 
 ## FluxEUICC의 장점
 
