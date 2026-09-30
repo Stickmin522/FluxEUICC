@@ -1,18 +1,42 @@
 # FluxEUICC
 
-FluxEUICC is an Android app for managing removable eSIM cards, based on [OpenEUICC](https://gitea.angry.im/PeterCxy/OpenEUICC).
+English | [简体中文](README.zh-CN.md)
 
-## Features
+**Add, switch, and manage your eSIM profiles with ease.**
 
-- Download eSIM profiles using a QR code or activation code.
-- Enable, disable, rename, and delete profiles.
-- View card information and use compatible USB CCID readers.
-- Choose a supported interface language or follow the system language.
+FluxEUICC is an Android app for managing removable eSIM cards, based on [OpenEUICC](https://gitea.angry.im/PeterCxy/OpenEUICC). It brings your profiles together in a clear interface for everyday downloads, switching, and management, without requiring root.
 
-## Download
+## Why choose FluxEUICC
 
-Download the APK from [Releases](https://github.com/Stickmin522/FluxEUICC/releases).
+- **A modern, clear interface**: profile cards, visible activation status, and simple menus keep common actions easy to find. System theme colors and adaptive icons help the app fit your device.
+- **More timely switching feedback**: optimized reconnection waits after profile changes and clear results reduce uncertainty during long waits.
+- **Nine interface languages**: follow the system language by default or choose a supported language, making the app easier to use across regions.
+- **Designed for modern Android devices**: adapted for Android 17, focused on 64-bit devices, with modern edge-to-edge layouts and back gesture support.
 
-## License
+## What you can do
 
-Distributed under [GPL-3.0-only](LICENSE), with upstream copyright notices retained.
+- Scan a QR code or enter an activation code to download a new eSIM profile.
+- View installed profiles, enable or disable them, and switch the active profile.
+- Rename profiles and delete those you no longer need to organize your eSIM list.
+- View card information, check device compatibility, and manage cards through compatible USB CCID readers.
+
+## Supported languages
+
+English, Simplified Chinese, Traditional Chinese, Japanese, Korean, Arabic, French, German, and Spanish.
+
+The interface falls back to English when the system language is not supported.
+
+## Download and get started
+
+Current version: **1.1.1**. Get the APK from the [download page](https://github.com/Stickmin522/FluxEUICC/releases/latest).
+
+1. Install the app on a 64-bit device running Android 9 or later.
+2. Insert an OpenEUICC-compatible removable eSIM or connect a compatible USB reader.
+3. Cards used in a phone's SIM slot must authorize FluxEUICC's signing certificate. View and copy the required fingerprint in the app's settings; see the release instructions for setup details.
+4. Add your profiles and choose the eSIM you want to enable.
+
+Available features depend on phone, card, and reader compatibility. Network recovery time after switching depends on the card and phone system.
+
+## Open source and license
+
+FluxEUICC is based on OpenEUICC and distributed under the [GPL-3.0-only license](LICENSE), with upstream copyright notices preserved. Dependency licenses are included in their respective directories.
