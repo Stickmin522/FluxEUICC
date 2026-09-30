@@ -10,6 +10,10 @@ FluxEUICC is an Android app for managing removable eSIM cards, based on [OpenEUI
   <img src="art/FluxEUICC-logo.png" alt="FluxEUICC" width="240" height="240">
 </p>
 
+> **Before you start**
+>
+> FluxEUICC only manages removable eSIM cards compatible with OpenEUICC. Installing this app alone does not add eSIM capability to a phone that lacks it. Before using the app, purchase a compatible removable eSIM card, such as eSTK or 9eSIM.
+
 ## Why choose FluxEUICC
 
 - **A modern, clear interface**: profile cards, visible activation status, and simple menus keep common actions easy to find. System theme colors and adaptive icons help the app fit your device.

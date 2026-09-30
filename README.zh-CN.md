@@ -10,6 +10,10 @@ FluxEUICC 是一款基于 [OpenEUICC](https://gitea.angry.im/PeterCxy/OpenEUICC)
   <img src="art/FluxEUICC-logo.png" alt="FluxEUICC" width="240" height="240">
 </p>
 
+> **使用前须知**
+>
+> FluxEUICC 仅用于管理兼容 OpenEUICC 的可拆卸 eSIM 卡。仅安装此应用，无法为没有 eSIM 功能的手机添加 eSIM 支持。使用前，请先购买兼容的可拆卸 eSIM 卡，例如 eSTK 或 9eSIM。
+
 ## 为什么选择 FluxEUICC
 
 - **现代、清晰的界面**：卡片式套餐列表、直观的启用状态和简洁的菜单，让常用操作更容易找到；支持系统主题配色和自适应图标。
