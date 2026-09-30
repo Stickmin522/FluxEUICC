@@ -34,7 +34,7 @@ The interface falls back to English when the system language is not supported.
 
 Current version: **1.1.2**. Get the APK from the [download page](https://github.com/Stickmin522/FluxEUICC/releases/latest).
 
-1. Install the app on a 64-bit device running Android 9 or later.
+1. Install the app on a 64-bit ARM device running Android 9 or later.
 2. Insert an OpenEUICC-compatible removable eSIM or connect a compatible USB reader.
 3. Cards used in a phone's SIM slot must authorize FluxEUICC's signing certificate. View and copy the required fingerprint in the app's settings; see the release instructions for setup details.
 4. Add your profiles and choose the eSIM you want to enable.

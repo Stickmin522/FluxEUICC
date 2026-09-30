@@ -34,7 +34,7 @@ La interfaz se muestra en inglés cuando el idioma del sistema no está disponib
 
 Versión actual: **1.1.2**. Descarga el APK desde la [página de descargas](https://github.com/Stickmin522/FluxEUICC/releases/latest).
 
-1. Instala la aplicación en un dispositivo de 64 bits con Android 9 o posterior.
+1. Instala la aplicación en un dispositivo ARM de 64 bits con Android 9 o posterior.
 2. Inserta una eSIM extraíble compatible con OpenEUICC o conecta un lector USB compatible.
 3. Las tarjetas utilizadas en la ranura SIM del teléfono deben autorizar el certificado de firma de FluxEUICC. Puedes consultar y copiar la huella necesaria en los ajustes de la aplicación; las instrucciones de la versión incluyen los detalles de configuración.
 4. Añade tus perfiles y elige la eSIM que quieres activar.

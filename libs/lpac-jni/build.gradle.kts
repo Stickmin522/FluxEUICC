@@ -5,6 +5,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+val emulatorBuild = providers.gradleProperty("fluxEmulator").orNull == "true"
+
 android {
     namespace = "net.typeblog.lpac_jni"
     compileSdk = 37
@@ -13,7 +15,7 @@ android {
     defaultConfig {
         minSdk = 27
         ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64")
+            abiFilters += "arm64-v8a"
         }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -30,6 +32,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            if (emulatorBuild) {
+                ndk {
+                    abiFilters += "x86_64"
+                }
+            }
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

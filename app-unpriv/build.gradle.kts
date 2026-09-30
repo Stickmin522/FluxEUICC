@@ -15,6 +15,8 @@ apply {
     plugin<MySigningPlugin>()
 }
 
+val emulatorBuild = providers.gradleProperty("fluxEmulator").orNull == "true"
+
 android {
     namespace = "im.angry.easyeuicc"
     compileSdk = 37
@@ -22,12 +24,12 @@ android {
 
     defaultConfig {
         applicationId = "dev.codex.esimmanager17"
-        versionCode = 1790685449
+        versionCode = 1790685450
         versionName = "1.1.2"
         minSdk = 28
         targetSdk = 37
         ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64")
+            abiFilters += "arm64-v8a"
         }
     }
 
@@ -36,6 +38,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            if (emulatorBuild) {
+                ndk {
+                    abiFilters += "x86_64"
+                }
+            }
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
