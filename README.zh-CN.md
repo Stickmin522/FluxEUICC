@@ -36,7 +36,7 @@ FluxEUICC 是一款基于 [OpenEUICC](https://gitea.angry.im/PeterCxy/OpenEUICC)
 
 1. 在 Android 9 或更高版本的 64 位 ARM 设备上安装应用。
 2. 插入兼容 OpenEUICC 的可拆卸 eSIM，或连接兼容的 USB 读卡器。
-3. 手机卡槽中的卡片需授权 FluxEUICC 的签名证书；可在应用设置中查看并复制授权所需的指纹，具体步骤见发布页的中文使用说明。
+3. 手机卡槽中的卡片需授权 FluxEUICC 的签名证书；可在应用设置中查看并复制授权所需的指纹。
 4. 添加你的套餐，选择需要启用的 eSIM。
 
 可用功能取决于手机、卡片与读卡器的兼容性。套餐切换后的网络恢复时间由卡片和手机系统决定。

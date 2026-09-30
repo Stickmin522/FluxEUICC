@@ -36,7 +36,7 @@ Aktuelle Version: **1.1.2**. Laden Sie die APK von der [Downloadseite](https://g
 
 1. Installieren Sie die App auf einem 64-Bit-ARM-Gerät mit Android 9 oder neuer.
 2. Legen Sie eine mit OpenEUICC kompatible, herausnehmbare eSIM ein oder schließen Sie ein kompatibles USB-Lesegerät an.
-3. Karten im SIM-Steckplatz des Telefons müssen das Signaturzertifikat von FluxEUICC zulassen. Den benötigten Fingerabdruck können Sie in den App-Einstellungen anzeigen und kopieren. Einzelheiten finden Sie in den Anweisungen auf der Release-Seite.
+3. Karten im SIM-Steckplatz des Telefons müssen das Signaturzertifikat von FluxEUICC zulassen. Den benötigten Fingerabdruck können Sie in den App-Einstellungen anzeigen und kopieren.
 4. Fügen Sie Ihre Profile hinzu und wählen Sie die eSIM aus, die Sie aktivieren möchten.
 
 Welche Funktionen verfügbar sind, hängt von der Kompatibilität des Telefons, der Karte und des Lesegeräts ab. Wie schnell die Netzwerkverbindung nach einem Wechsel wiederhergestellt wird, hängt von der Karte und dem Telefonsystem ab.

@@ -16,3 +16,13 @@
 /.kotlin/
 *.jks
 *.keystore
+
+# Build outputs
+/app-common/build/
+/app-unpriv/build/
+/app-deps/build/
+/buildSrc/build/
+/libs/*/build/
+/libs/*/.cxx/
+*.apk
+*.log

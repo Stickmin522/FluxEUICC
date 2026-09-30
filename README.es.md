@@ -36,7 +36,7 @@ Versión actual: **1.1.2**. Descarga el APK desde la [página de descargas](http
 
 1. Instala la aplicación en un dispositivo ARM de 64 bits con Android 9 o posterior.
 2. Inserta una eSIM extraíble compatible con OpenEUICC o conecta un lector USB compatible.
-3. Las tarjetas utilizadas en la ranura SIM del teléfono deben autorizar el certificado de firma de FluxEUICC. Puedes consultar y copiar la huella necesaria en los ajustes de la aplicación; las instrucciones de la versión incluyen los detalles de configuración.
+3. Las tarjetas utilizadas en la ranura SIM del teléfono deben autorizar el certificado de firma de FluxEUICC. Puedes consultar y copiar la huella necesaria en los ajustes de la aplicación.
 4. Añade tus perfiles y elige la eSIM que quieres activar.
 
 Las funciones disponibles dependen de la compatibilidad del teléfono, la tarjeta y el lector. El tiempo de recuperación de la red tras un cambio depende de la tarjeta y del sistema del teléfono.
