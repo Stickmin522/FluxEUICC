@@ -1,6 +1,10 @@
+<p align="center">
+  <img src="art/FluxEUICC-icon.png" alt="FluxEUICC" width="112" height="112">
+</p>
+
 # FluxEUICC
 
-[English](README.md) | 简体中文
+[English](README.md) | **简体中文** | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [العربية](README.ar.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | [Español](README.es.md)
 
 **轻松添加、切换和管理你的 eSIM 套餐。**
 
