@@ -32,7 +32,7 @@ FluxEUICC 是一款基於 [OpenEUICC](https://gitea.angry.im/PeterCxy/OpenEUICC)
 
 ## 下載與使用
 
-目前版本：**1.1.1**。前往 [下載頁面](https://github.com/Stickmin522/FluxEUICC/releases/latest) 取得 APK。
+目前版本：**1.1.2**。前往 [下載頁面](https://github.com/Stickmin522/FluxEUICC/releases/latest) 取得 APK。
 
 1. 在 Android 9 或更新版本的 64 位元裝置上安裝應用程式。
 2. 插入相容於 OpenEUICC 的可拆卸 eSIM，或連接相容的 USB 讀卡機。
