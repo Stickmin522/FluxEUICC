@@ -37,7 +37,8 @@ import im.angry.openeuicc.service.EuiccChannelManagerService.Companion.waitDone
 import im.angry.openeuicc.ui.wizard.DownloadWizardActivity
 import im.angry.openeuicc.util.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -70,6 +71,8 @@ open class EuiccManagementFragment : Fragment(), EuiccProfilesChangedListener,
     // Marker for when this fragment might enter an invalid state
     // e.g. after a failed enable / disable operation
     private var invalid = false
+    private var switching = false
+    private var refreshJob: Job? = null
 
     // Subscribe to settings we care about outside of coroutine contexts while initializing
     // This gives us access to the "latest" state without having to launch coroutines
@@ -84,7 +87,7 @@ open class EuiccManagementFragment : Fragment(), EuiccProfilesChangedListener,
     }
 
     open fun appendMainMenuActions(actions: MutableList<ModernActionSheet.Action>) {
-        if (logicalSlotId == -1) return
+        if (logicalSlotId == -1 || invalid || switching) return
         actions += ModernActionSheet.Action(getString(R.string.profile_notifications_show)) {
             startActivity(Intent(requireContext(), NotificationsActivity::class.java).apply {
                 putExtra("logicalSlotId", logicalSlotId)
@@ -215,11 +218,23 @@ open class EuiccManagementFragment : Fragment(), EuiccProfilesChangedListener,
         }
 
     private fun refresh() {
-        if (invalid) return
+        if (view == null || switching || refreshJob?.isActive == true) return
         swipeRefresh.isRefreshing = true
-
-        lifecycleScope.launch {
-            doRefresh()
+        refreshJob = viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                doRefresh()
+                invalid = false
+                fab.isEnabled = true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                invalid = true
+                fab.isEnabled = false
+                Snackbar.make(requireView(), R.string.profile_read_failed, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.profile_retry) { refresh() }.show()
+            } finally {
+                if (view != null) swipeRefresh.isRefreshing = false
+            }
         }
     }
 
@@ -240,12 +255,10 @@ open class EuiccManagementFragment : Fragment(), EuiccProfilesChangedListener,
         val profiles = withEuiccChannel { channel ->
             logicalSlotId = channel.logicalSlotId
             eid = channel.lpa.eID
-            enabledProfile = channel.lpa.profiles.enabled
+            val cardProfiles = channel.lpa.profiles
+            enabledProfile = cardProfiles.enabled
             euiccChannelManager.notifyEuiccProfilesChanged(channel.logicalSlotId)
-            if (unfilteredProfileListFlow.value)
-                channel.lpa.profiles
-            else
-                channel.lpa.profiles.operational
+            if (unfilteredProfileListFlow.value) cardProfiles else cardProfiles.operational
         }
 
         withContext(Dispatchers.Main) {
@@ -261,64 +274,53 @@ open class EuiccManagementFragment : Fragment(), EuiccProfilesChangedListener,
         Toast.makeText(context, resId, Toast.LENGTH_LONG).show()
     }
 
+    private fun showSwitchRecovery(message: Int) {
+        AlertDialog.Builder(requireContext(), R.style.AlertDialogTheme)
+            .setMessage(message)
+            .setPositiveButton(R.string.profile_retry) { _, _ -> refresh() }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
     private fun enableOrDisableProfile(iccid: String, enable: Boolean) {
+        if (switching || invalid) return
+        switching = true
+        refreshJob?.cancel()
         swipeRefresh.isRefreshing = true
         fab.isEnabled = false
 
-        lifecycleScope.launch {
-            ensureEuiccChannelManager()
-            euiccChannelManagerService.waitForForegroundTask()
-
-            val err = euiccChannelManagerService
-                .launchProfileSwitchTask(
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                ensureEuiccChannelManager()
+                euiccChannelManagerService.waitForForegroundTask()
+                val error = euiccChannelManagerService.launchProfileSwitchTask(
                     slotId, portId, seId, iccid, enable,
-                    reconnectTimeoutMillis = if (isUsb) 30 * 1000 else 12 * 1000
-                )
-                .stateFlow.waitDone()
-
-            when (err) {
-                null -> {
-                    if (enable && !isUsb && isAdded) {
-                        Snackbar.make(
-                            requireView(),
-                            R.string.profile_switch_chip_done,
-                            Snackbar.LENGTH_LONG,
-                        ).show()
+                    reconnectTimeoutMillis = 30_000
+                ).stateFlow.waitDone()
+                when (error) {
+                    null -> if (enable && !isUsb) {
+                        Snackbar.make(requireView(), R.string.profile_switch_chip_done, Snackbar.LENGTH_LONG).show()
                     }
-                }
-                is EuiccChannelManagerService.SwitchingProfilesRefreshException -> {
-                    // This is only really fatal for internal eSIMs
-                    if (!isUsb) {
-                        withContext(Dispatchers.Main) {
-                            AlertDialog.Builder(requireContext(), R.style.AlertDialogTheme)
-                                .setMessage(R.string.profile_switch_did_not_refresh)
-                                .setPositiveButton(android.R.string.ok) { _, _ -> requireActivity().finish() }
-                                .setOnDismissListener { _ -> requireActivity().finish() }
-                                .show()
-                        }
-                    }
-                }
-
-                is EuiccChannelManagerService.SwitchingProfilesReconnectException -> {
-                    withContext(Dispatchers.Main) {
-                        // Prevent this Fragment from being used again
+                    is EuiccChannelManagerService.SwitchingProfilesRefreshException ->
+                        showSwitchRecovery(R.string.profile_switch_did_not_refresh)
+                    is EuiccChannelManagerService.SwitchingProfilesReconnectException -> {
                         invalid = true
-                        // Timed out waiting for SIM to come back online, we can no longer assume that the LPA is still valid
-                        AlertDialog.Builder(requireContext(), R.style.AlertDialogTheme)
-                            .setMessage(R.string.profile_switch_pending_system)
-                            .setPositiveButton(android.R.string.ok) { _, _ -> requireActivity().finish() }
-                            .setOnDismissListener { _ -> requireActivity().finish() }
-                            .show()
+                        showSwitchRecovery(R.string.profile_switch_pending_system)
                     }
+                    else -> showSwitchFailureText()
                 }
-
-                is TimeoutCancellationException -> showSwitchFailureText()
-
-                else -> showSwitchFailureText()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                showSwitchFailureText()
+            } finally {
+                switching = false
+                if (view != null) {
+                    swipeRefresh.isRefreshing = false
+                    fab.isEnabled = !invalid
+                    if (!invalid) refresh()
+                }
             }
-
-            refresh()
-            fab.isEnabled = true
         }
     }
 
@@ -459,7 +461,7 @@ open class EuiccManagementFragment : Fragment(), EuiccProfilesChangedListener,
 
         private fun showOptionsMenu() {
             // Prevent users from doing multiple things at once
-            if (invalid || swipeRefresh.isRefreshing) return
+            if (invalid || switching || swipeRefresh.isRefreshing) return
 
             val popup = PopupMenu(root.context, profileMenu)
             populatePopupWithProfileActions(popup, profile)

@@ -23,7 +23,7 @@ Java_net_typeblog_lpac_1jni_LpacJni_handleNotification(JNIEnv *env, jobject thiz
     int res;
 
     res = es10b_retrieve_notifications_list(ctx, &notification, (unsigned long) seq_number);
-    syslog(LOG_DEBUG, "es10b_retrieve_notification = %d %s", res, notification.b64_PendingNotification);
+    syslog(LOG_DEBUG, "es10b_retrieve_notification = %d", res);
     if (res < 0)
         goto out;
 

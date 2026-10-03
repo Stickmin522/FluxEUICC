@@ -213,4 +213,6 @@
         <item>Alta eficiencia</item>
         <item>Máxima compatibilidad</item>
     </string-array>
+    <string name="profile_retry">Reintentar</string>
+    <string name="profile_read_failed">No se puede leer la tarjeta eSIM. Comprueba su conexión e inténtalo de nuevo.</string>
 </resources>

@@ -53,7 +53,7 @@ fun LocalProfileAssistant.switchProfile(
  */
 fun LocalProfileAssistant.disableActiveProfile(refresh: Boolean): Boolean =
     profiles.enabled?.let {
-        Log.i(TAG, "Disabling active profile ${it.iccid}")
+        Log.i(TAG, "Disabling active profile")
         disableProfile(it.iccid, refresh)
     } ?: true
 
@@ -66,7 +66,7 @@ fun LocalProfileAssistant.disableActiveProfile(refresh: Boolean): Boolean =
  */
 fun LocalProfileAssistant.disableActiveProfileKeepIccId(refresh: Boolean): String? =
     profiles.enabled?.let {
-        Log.i(TAG, "Disabling active profile ${it.iccid}")
+        Log.i(TAG, "Disabling active profile")
         if (disableProfile(it.iccid, refresh)) {
             it.iccid
         } else {
@@ -88,11 +88,12 @@ fun LocalProfileAssistant.disableActiveProfileKeepIccId(refresh: Boolean): Strin
  * should be the concern of op() itself, and this function assumes that when
  * op() returns, the slotId and portId will correspond to a valid channel again.
  */
-suspend inline fun EuiccChannelManager.beginTrackedOperation(
+suspend fun EuiccChannelManager.beginTrackedOperation(
     slotId: Int,
     portId: Int,
     seId: EuiccChannel.SecureElementId,
-    op: () -> Boolean
+    notificationHandler: (suspend (Long) -> Unit)? = null,
+    op: suspend () -> Boolean
 ) {
     val latestSeq = withEuiccChannel(slotId, portId, seId) { channel ->
         channel.lpa.notifications.firstOrNull()?.seqNumber
@@ -100,13 +101,16 @@ suspend inline fun EuiccChannelManager.beginTrackedOperation(
     }
     Log.d(TAG, "Latest notification is $latestSeq before operation")
     if (op()) {
-        Log.d(TAG, "Operation has requested notification handling")
+        if (notificationHandler != null) {
+            notificationHandler(latestSeq)
+            return
+        }
         try {
             // Note that the exact instance of "channel" might have changed here if reconnected;
             // this is why we need to use two distinct calls to withEuiccChannel()
             withEuiccChannel(slotId, portId, seId) { channel ->
                 channel.lpa.notifications.filter { it.seqNumber > latestSeq }.forEach {
-                    Log.d(TAG, "Handling notification $it")
+                    Log.d(TAG, "Handling notification ${it.seqNumber}")
                     channel.lpa.handleNotification(it.seqNumber)
                 }
             }

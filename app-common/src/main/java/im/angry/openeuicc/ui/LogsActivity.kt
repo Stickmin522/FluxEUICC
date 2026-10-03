@@ -100,7 +100,7 @@ class LogsActivity : AppCompatActivity() {
     private suspend fun reload() = withContext(Dispatchers.Main) {
         swipeRefresh.isRefreshing = true
 
-        logStr = intent.extras?.getString("log") ?: readSelfLog()
+        logStr = redactLog(intent.extras?.getString("log") ?: readSelfLog())
 
         logText.text = withContext(Dispatchers.IO) {
             // Limit the UI to display only 256 lines

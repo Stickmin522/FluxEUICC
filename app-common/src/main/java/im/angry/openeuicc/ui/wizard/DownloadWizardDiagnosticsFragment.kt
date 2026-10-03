@@ -88,13 +88,20 @@ class DownloadWizardDiagnosticsFragment : DownloadWizardActivity.DownloadWizardS
 
             val str = resp.data.decodeToString(throwOnInvalidSequence = false)
 
-            ret.appendLine(
-                if (str.startsWith('{')) {
-                    JSONObject(str).toString(2)
-                } else {
-                    str
+            val status = runCatching {
+                JSONObject(str).optJSONObject("header")?.optJSONObject("functionExecutionStatus")
+            }.getOrNull()
+            if (status != null) {
+                val safeStatus = JSONObject().put("status", status.optString("status"))
+                status.optJSONObject("statusCodeData")?.let { codes ->
+                    safeStatus.put("statusCodeData", JSONObject()
+                        .put("subjectCode", codes.optString("subjectCode"))
+                        .put("reasonCode", codes.optString("reasonCode")))
                 }
-            )
+                ret.appendLine(safeStatus.toString(2))
+            } else {
+                ret.appendLine("Response body omitted.")
+            }
 
             ret.appendLine()
         }
@@ -119,7 +126,7 @@ class DownloadWizardDiagnosticsFragment : DownloadWizardActivity.DownloadWizardS
                 ret.appendLine(
                     getString(
                         R.string.download_wizard_diagnostics_last_apdu_response,
-                        resp.encodeHex()
+                        resp.takeLast(2).toByteArray().encodeHex()
                     )
                 )
                 ret.appendLine()
@@ -136,6 +143,6 @@ class DownloadWizardDiagnosticsFragment : DownloadWizardActivity.DownloadWizardS
             ret.appendLine()
         }
 
-        ret.toString()
+        redactLog(ret.toString())
     }
 }

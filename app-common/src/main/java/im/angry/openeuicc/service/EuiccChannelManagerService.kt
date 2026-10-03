@@ -16,6 +16,10 @@ import im.angry.openeuicc.core.EuiccChannel
 import im.angry.openeuicc.core.EuiccChannelManager
 import im.angry.openeuicc.util.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.BufferOverflow
@@ -39,10 +43,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.yield
 import net.typeblog.lpac_jni.ProfileDownloadInput
 import net.typeblog.lpac_jni.ProfileDownloadState
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * An Android Service wrapper for EuiccChannelManager.
@@ -119,7 +123,8 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
      * The service self-starts when foreground is required, because other components
      * only bind to this service and do not start it per-se.
      */
-    private val foregroundStarted: MutableSharedFlow<Unit> = MutableSharedFlow()
+    private val foregroundStarted = MutableStateFlow(-1L)
+    private val taskIds = AtomicLong(System.currentTimeMillis())
 
     /**
      * This flow is used to emit progress updates when a foreground task is running.
@@ -131,7 +136,7 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
      * Every handle represents a subscriber to a foreground task's state updates (via stateFlow),
      * and a way to back-communicate (via backChannel).
      *
-     * taskID is the exact millisecond-precision timestamp when the task is launched.
+     * taskId uniquely identifies a task within this service instance.
      */
     data class ForegroundTaskHandle(
         val taskId: Long,
@@ -159,6 +164,11 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
      * the task completes while they are being recreated.
      */
     private val foregroundTaskRecords: MutableMap<Long, ForegroundTaskRecord> = mutableMapOf()
+    private val operationLock = Mutex()
+    private data class NotificationKey(val slotId: Int, val portId: Int, val seId: EuiccChannel.SecureElementId)
+    private data class NotificationRequest(var afterSeq: Long, var failures: Int = 0, var generation: Int = 0)
+    private val pendingNotifications = mutableMapOf<NotificationKey, NotificationRequest>()
+    private var notificationJob: Job? = null
 
     override fun onBind(intent: Intent): IBinder {
         super.onBind(intent)
@@ -174,9 +184,7 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return super.onStartCommand(intent, flags, startId).also {
-            lifecycleScope.launch {
-                foregroundStarted.emit(Unit)
-            }
+            foregroundStarted.value = intent?.getLongExtra("taskId", -1L) ?: -1L
         }
     }
 
@@ -220,6 +228,13 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
             // Yield out so that the main looper can handle the notification event
             // Without this yield, the notification sent above will not be shown in time.
             yield()
+        } else if (notificationJob?.isActive == true) {
+            startForeground(FOREGROUND_ID, NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle(getString(R.string.profile_notifications))
+                .setSmallIcon(R.drawable.ic_task_sim_card_download)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .build())
         } else {
             stopForeground(STOP_FOREGROUND_REMOVE)
         }
@@ -259,7 +274,7 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
      * to acquire another instance.
      *
      * The task closure is expected to update foregroundTaskState whenever appropriate.
-     * If a foreground task is already running, this function returns null.
+     * If a foreground task is already running, the returned handle reports a failure.
      *
      * To wait for foreground tasks to be available, use waitForForegroundTask().
      *
@@ -271,131 +286,134 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
         iconRes: Int,
         task: suspend EuiccChannelManagerService.(Channel<Any>) -> Unit
     ): ForegroundTaskHandle {
-        val taskID = System.currentTimeMillis()
-        // Buffered so that a subscriber's send() never blocks
+        val taskId = taskIds.incrementAndGet()
         val backChannel = Channel<Any>(capacity = Channel.BUFFERED)
-
-        // Atomically set the state to InProgress. If this returns true, we are
-        // the only task currently in progress.
         if (!foregroundTaskState.compareAndSet(
                 ForegroundTaskState.Idle,
                 ForegroundTaskState.InProgress(0)
             )
         ) {
+            backChannel.close()
             return ForegroundTaskHandle(
-                taskID,
+                taskId,
                 flow { emit(ForegroundTaskState.Done(IllegalStateException("There are tasks currently running"))) },
-                backChannel)
+                backChannel
+            )
         }
 
-        lifecycleScope.launch(Dispatchers.Main) {
-            // Wait until our self-start command has succeeded.
-            // We can only call startForeground() after that
-            val res = withTimeoutOrNull(30 * 1000) {
-                foregroundStarted.first()
-            }
-
-            if (res == null) {
-                // The only case where the wait above could time out is if the handle
-                // to the flow is stuck. Or we failed to start foreground.
-                // In that case, we should just set our state back to Idle -- setting it
-                // to Done wouldn't help much because nothing is going to then set it Idle.
-                foregroundTaskState.value = ForegroundTaskState.Idle
-                return@launch
-            }
-
-            updateForegroundNotification(title, iconRes)
-
-            wakeLock.acquire(10 * 60 * 1000L /*10 minutes*/)
-
-            try {
-                withContext(Dispatchers.IO + NonCancellable) { // Any LPA-related task must always complete
-                    this@EuiccChannelManagerService.task(backChannel)
-                }
-                // This update will be sent by the subscriber (as shown below)
-                foregroundTaskState.value = ForegroundTaskState.Done(null)
-            } catch (t: Throwable) {
-                Log.e(TAG, "Foreground task encountered an error")
-                Log.e(TAG, Log.getStackTraceString(t))
-                foregroundTaskState.value = ForegroundTaskState.Done(t)
-
-                if (isActive) {
-                    postForegroundTaskFailureNotification(failureTitle)
-                }
-            } finally {
-                wakeLock.release()
-                if (isActive) {
-                    stopSelf()
-                }
-            }
-        }
-
-        // This is the flow we are going to return. We allow multiple handles by
-        // re-emitting state updates into this flow from another coroutine.
-        // replay = 2 ensures that we at least have 1 previous state whenever subscribed to.
-        // This is helpful when the task completed and is then re-subscribed to due to a
-        // UI recreation event -- this way, the UI will know at least one last progress event
-        // before completion / failure
         val stateFlow = MutableSharedFlow<ForegroundTaskState>(
             replay = 2,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
+        foregroundTaskRecords[taskId] = ForegroundTaskRecord(stateFlow.asSharedFlow(), backChannel)
+        foregroundTaskRecords.keys.sorted().dropLast(5).forEach(foregroundTaskRecords::remove)
 
-        // We should be the only task running, so we can subscribe to foregroundTaskState
-        // until we encounter ForegroundTaskState.Done.
-        // Then, we complete the returned flow, but we also set the state back to Idle.
-        // The state update back to Idle won't show up in the returned stream, because
-        // it has been completed by that point.
         lifecycleScope.launch(Dispatchers.Main) {
-            foregroundTaskState
-                .applyCompletionTransform()
-                .onEach {
-                    // Also update our notification when we see an update
-                    // But ignore the first progress = 0 update -- that is the current value.
-                    // we need that to be handled by the main coroutine after it finishes.
-                    if (it !is ForegroundTaskState.InProgress || it.progress != 0) {
-                        updateForegroundNotification(title, iconRes)
+            foregroundTaskState.applyCompletionTransform()
+                .onEach { state ->
+                    if (state !is ForegroundTaskState.InProgress || state.progress != 0) {
+                        runCatching { updateForegroundNotification(title, iconRes) }
                     }
-
-                    stateFlow.emit(it)
+                    stateFlow.emit(state)
                 }
                 .onCompletion {
-                    // Reset state back to Idle when we are done.
-                    // We do it here because otherwise Idle and Done might become conflated
-                    // when emitted by the main coroutine in quick succession.
-                    // Doing it here ensures we've seen Done. This Idle event won't be
-                    // emitted to the consumer because the subscription has completed here.
                     foregroundTaskState.value = ForegroundTaskState.Idle
                     backChannel.close()
                 }
                 .collect()
         }
 
-        foregroundTaskRecords[taskID] = ForegroundTaskRecord(stateFlow.asSharedFlow(), backChannel)
+        lifecycleScope.launch(Dispatchers.Main) {
+            var acquiredWakeLock = false
+            try {
+                startForegroundService(Intent(this@EuiccChannelManagerService,
+                    this@EuiccChannelManagerService::class.java).putExtra("taskId", taskId))
+                withTimeout(30_000) { foregroundStarted.first { it == taskId } }
+                updateForegroundNotification(title, iconRes)
+                wakeLock.acquire(10 * 60 * 1000L)
+                acquiredWakeLock = true
 
-        if (foregroundTaskRecords.size > 5) {
-            // Remove enough elements so that the size is kept at 5
-            for (key in foregroundTaskRecords.keys.sorted()
-                .take(foregroundTaskRecords.size - 5)) {
-                foregroundTaskRecords.remove(key)
+                withContext(Dispatchers.IO + NonCancellable) {
+                    operationLock.withLock {
+                        this@EuiccChannelManagerService.task(backChannel)
+                    }
+                }
+                foregroundTaskState.value = ForegroundTaskState.Done(null)
+            } catch (t: Throwable) {
+                Log.e(TAG, "Foreground task failed: ${t.javaClass.simpleName}")
+                foregroundTaskState.value = ForegroundTaskState.Done(t)
+                if (isActive) {
+                    runCatching { postForegroundTaskFailureNotification(failureTitle) }
+                }
+            } finally {
+                if (acquiredWakeLock && wakeLock.isHeld) wakeLock.release()
+                if (isActive && notificationJob?.isActive != true) stopSelf()
             }
         }
 
-        // Before we return, and after we have set everything up,
-        // self-start with foreground permission.
-        // This is going to unblock the main coroutine handling the task.
-        startForegroundService(
-            Intent(
-                this@EuiccChannelManagerService,
-                this@EuiccChannelManagerService::class.java
-            )
-        )
+        return ForegroundTaskHandle(taskId, stateFlow.asSharedFlow().applyCompletionTransform(), backChannel)
+    }
 
-        return ForegroundTaskHandle(
-            taskID,
-            stateFlow.asSharedFlow().applyCompletionTransform(),
-            backChannel
-        )
+    private suspend fun runTrackedOperation(
+        slotId: Int,
+        portId: Int,
+        seId: EuiccChannel.SecureElementId,
+        op: suspend () -> Boolean
+    ) = euiccChannelManager.beginTrackedOperation(slotId, portId, seId,
+        notificationHandler = { sequence -> queueNotifications(NotificationKey(slotId, portId, seId), sequence) },
+        op = op
+    )
+
+    private suspend fun queueNotifications(key: NotificationKey, afterSeq: Long) = withContext(Dispatchers.Main) {
+        pendingNotifications[key]?.let {
+            it.afterSeq = minOf(it.afterSeq, afterSeq)
+            it.failures = 0
+            it.generation++
+        } ?: run { pendingNotifications[key] = NotificationRequest(afterSeq) }
+        if (notificationJob?.isActive == true) return@withContext
+
+        notificationJob = lifecycleScope.launch {
+            try {
+                while (pendingNotifications.isNotEmpty()) {
+                    waitForForegroundTask()
+                    delay(250)
+                    val (card, request) = pendingNotifications.entries.first().let { it.key to it.value }
+                    val generation = request.generation
+                    try {
+                        val result = withContext(Dispatchers.IO) {
+                            operationLock.withLock {
+                                if (foregroundTaskState.value != ForegroundTaskState.Idle) return@withLock null
+                                euiccChannelManager.withEuiccChannel(card.slotId, card.portId, card.seId) { channel ->
+                                    val notification = channel.lpa.notifications
+                                        .filter { it.seqNumber > request.afterSeq }.minByOrNull { it.seqNumber }
+                                    if (notification == null) return@withEuiccChannel -1L
+                                    check(channel.lpa.handleNotification(notification.seqNumber)) { "Notification not accepted" }
+                                    notification.seqNumber
+                                }
+                            }
+                        } ?: continue
+                        if (result == -1L) {
+                            if (request.generation == generation) pendingNotifications.remove(card)
+                        } else {
+                            request.afterSeq = maxOf(request.afterSeq, result)
+                            request.failures = 0
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Notification delivery failed: ${e.javaClass.simpleName}")
+                        if (++request.failures >= 3 && request.generation == generation) pendingNotifications.remove(card)
+                        else delay(request.failures * 1_000L)
+                    }
+                }
+            } finally {
+                notificationJob = null
+                if (isActive && foregroundTaskState.value == ForegroundTaskState.Idle) {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                }
+            }
+        }
     }
 
     open suspend fun waitForForegroundTask() {
@@ -412,7 +430,7 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
             getString(R.string.task_profile_download_failure),
             R.drawable.ic_task_sim_card_download
         ) { backChannel ->
-            euiccChannelManager.beginTrackedOperation(slotId, portId, seId) {
+            runTrackedOperation(slotId, portId, seId) {
                 euiccChannelManager.withEuiccChannel(slotId, portId, seId) { channel ->
                     channel.lpa.downloadProfile(input) { state ->
                         val progress = state.downloadProgress
@@ -422,14 +440,6 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
                         )
 
                         if (state is ProfileDownloadState.ConfirmingDownload) {
-                            state.metadata?.let { metadata ->
-                                // TODO: Actually do something here and not just logging?
-                                Log.i(
-                                    TAG,
-                                    "Downloading profile provider=${metadata.providerName} name=${metadata.name}"
-                                )
-                            }
-
                             // Try to receive a signal for confirmation while blocking this thread
                             // This of course assumes we're NOT on the main thread here. We aren't,
                             // because we don't run download on the main thread; see withEuiccChannel.
@@ -485,9 +495,9 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
             getString(R.string.task_profile_delete_failure),
             R.drawable.ic_task_delete
         ) { _ ->
-            euiccChannelManager.beginTrackedOperation(slotId, portId, seId) {
+            runTrackedOperation(slotId, portId, seId) {
                 euiccChannelManager.withEuiccChannel(slotId, portId, seId) { channel ->
-                    channel.lpa.deleteProfile(iccid)
+                    check(channel.lpa.deleteProfile(iccid)) { "Could not delete profile" }
                 }
 
                 preferenceRepository.notificationDeleteFlow.first()
@@ -510,61 +520,42 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
             getString(R.string.task_profile_switch_failure),
             R.drawable.ic_task_switch
         ) { _ ->
-            euiccChannelManager.beginTrackedOperation(slotId, portId, seId) {
-                val (response, refreshed) =
-                    euiccChannelManager.withEuiccChannel(slotId, portId, seId) { channel ->
-                        val refresh = preferenceRepository.refreshAfterSwitchFlow.first()
-                        val response = channel.lpa.switchProfile(iccid, enable, refresh)
-                        if (response || !refresh) {
-                            Pair(response, refresh)
-                        } else {
-                            // refresh failed, but refresh was requested
-                            // Sometimes, we *can* enable or disable the profile, but we cannot
-                            // send the refresh command to the modem because the profile somehow
-                            // makes the modem "busy". In this case, we can still switch by setting
-                            // refresh to false, but then the switch cannot take effect until the
-                            // user resets the modem manually by toggling airplane mode or rebooting.
-                            Pair(
-                                channel.lpa.switchProfile(iccid, enable, refresh = false),
-                                false
-                            )
-                        }
-                    }
-
-                if (!response) {
-                    throw RuntimeException("Could not switch profile")
+            var warning: Exception? = null
+            runTrackedOperation(slotId, portId, seId) {
+                val (response, refreshed) = euiccChannelManager.withEuiccChannel(slotId, portId, seId) { channel ->
+                    val refresh = preferenceRepository.refreshAfterSwitchFlow.first()
+                    val response = channel.lpa.switchProfile(iccid, enable, refresh)
+                    if (response || !refresh) response to refresh
+                    else channel.lpa.switchProfile(iccid, enable, refresh = false) to false
                 }
+                check(response) { "Could not switch profile" }
 
                 if (!refreshed && slotId != EuiccChannelManager.USB_CHANNEL_ID) {
-                    // We may have switched the profile, but we could not refresh. Tell the caller about this
-                    // but only if we are talking to a modem and not a USB reader
-                    throw SwitchingProfilesRefreshException()
-                }
-
-                if (reconnectTimeoutMillis > 0) {
-                    // Give the modem a short head start before trying to reopen the channel.
-                    // A removable eSIM may remain accessible before Android updates its SIM state.
+                    warning = SwitchingProfilesRefreshException()
+                } else if (reconnectTimeoutMillis > 0) {
                     val initialDelay = if (slotId == EuiccChannelManager.USB_CHANNEL_ID) {
                         reconnectTimeoutMillis / 10
                     } else {
                         minOf(1_000L, reconnectTimeoutMillis / 10)
                     }
                     delay(initialDelay)
-
                     try {
-                        euiccChannelManager.waitForReconnect(
-                            slotId,
-                            portId,
-                            reconnectTimeoutMillis - initialDelay
-                        )
+                        euiccChannelManager.waitForReconnect(slotId, portId, reconnectTimeoutMillis - initialDelay)
                     } catch (_: TimeoutCancellationException) {
-                        // The card operation succeeded, but the Android card channel did not return.
-                        throw SwitchingProfilesReconnectException()
+                        warning = SwitchingProfilesReconnectException()
                     }
                 }
 
+                if (warning !is SwitchingProfilesReconnectException) {
+                    euiccChannelManager.withEuiccChannel(slotId, portId, seId) { channel ->
+                        check(channel.lpa.profiles.find { it.iccid == iccid }?.isEnabled == enable) {
+                            "Profile state did not change"
+                        }
+                    }
+                }
                 preferenceRepository.notificationSwitchFlow.first()
             }
+            warning?.let { throw it }
         }
 
     fun launchMemoryReset(
@@ -577,7 +568,7 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
             getString(R.string.task_euicc_memory_reset_failure),
             R.drawable.ic_euicc_memory_reset
         ) { _ ->
-            euiccChannelManager.beginTrackedOperation(slotId, portId, seId) {
+            runTrackedOperation(slotId, portId, seId) {
                 euiccChannelManager.withEuiccChannel(slotId, portId, seId) { channel ->
                     channel.lpa.euiccMemoryReset()
                 }

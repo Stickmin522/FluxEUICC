@@ -25,6 +25,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import kotlin.time.Duration.Companion.milliseconds
@@ -80,7 +81,7 @@ class DownloadTaskLauncherTest {
     private suspend fun startService() {
         yield()
         shadowOf(Looper.getMainLooper()).idle()
-        service.onStartCommand(Intent(), 0, 1)
+        service.onStartCommand(shadowOf(RuntimeEnvironment.getApplication()).nextStartedService, 0, 1)
     }
 
     private suspend fun awaitTaskDone(

@@ -181,7 +181,7 @@ class UsbCcidTransceiver(
                 usbBulkIn, inputBuffer, inputBuffer.size, DEVICE_COMMUNICATE_TIMEOUT_MILLIS
             )
             if (runBlocking { verboseLoggingFlow.first() }) {
-                Log.d(TAG, "Received $readBytes bytes: ${inputBuffer.encodeHex()}")
+                Log.d(TAG, "Received $readBytes bytes")
             }
         } while (readBytes <= 0 && attempts-- > 0)
         if (inputBuffer[0] != 0x82.toByte()) {
@@ -224,7 +224,7 @@ class UsbCcidTransceiver(
                 usbBulkIn, inputBuffer, inputBuffer.size, DEVICE_COMMUNICATE_TIMEOUT_MILLIS
             )
             if (runBlocking { verboseLoggingFlow.first() }) {
-                Log.d(TAG, "Received $readBytes bytes: ${inputBuffer.encodeHex()}")
+                Log.d(TAG, "Received $readBytes bytes")
             }
         } while (readBytes <= 0 && attempts-- > 0)
         if (readBytes < CCID_HEADER_LENGTH) {

@@ -97,6 +97,7 @@ class MockLpa(
         // receives a Boolean -- exactly like a real download reaching the
         // ConfirmingDownload step.
         val result = callback.onStatusUpdate(ProfileDownloadState.ConfirmingDownload(null))
+        if (result) downloadNotification?.let { notifications = notifications + it }
         downloadReturned.complete(result)
     }
 
@@ -113,16 +114,41 @@ class MockLpa(
 
     // ---- trivial implementations for the rest of the LPA surface ----
     override val valid = true
-    override val profiles = emptyList<LocalProfileInfo>()
-    override val notifications = emptyList<LocalProfileNotification>()
+    override var profiles = emptyList<LocalProfileInfo>()
+    override var notifications = emptyList<LocalProfileNotification>()
+    var deleteResult = true
+    var switchUpdatesProfile = true
+    var refreshBusy = false
+    var deleteCalls = 0
+    var notificationFailures = 0
+    var downloadNotification: LocalProfileNotification? = null
+    val handledNotifications = java.util.concurrent.CopyOnWriteArrayList<Long>()
     override val eID = "mock-eid"
     override val euiccInfo2: EuiccInfo2? = null
     override fun setEs10xMss(mss: Byte) {}
-    override fun enableProfile(iccid: String, refresh: Boolean): Boolean = true
-    override fun disableProfile(iccid: String, refresh: Boolean): Boolean = true
-    override fun deleteProfile(iccid: String): Boolean = true
+    override fun enableProfile(iccid: String, refresh: Boolean): Boolean {
+        if (refresh && refreshBusy) return false
+        if (switchUpdatesProfile) profiles = profiles.map {
+            it.copy(state = if (it.iccid == iccid) LocalProfileInfo.State.Enabled else LocalProfileInfo.State.Disabled)
+        }
+        return true
+    }
+    override fun disableProfile(iccid: String, refresh: Boolean): Boolean {
+        if (refresh && refreshBusy) return false
+        if (switchUpdatesProfile) profiles = profiles.map {
+            if (it.iccid == iccid) it.copy(state = LocalProfileInfo.State.Disabled) else it
+        }
+        return true
+    }
+    override fun deleteProfile(iccid: String): Boolean {
+        deleteCalls++
+        return deleteResult
+    }
     override fun deleteNotification(seqNumber: Long): Boolean = true
-    override fun handleNotification(seqNumber: Long): Boolean = true
+    override fun handleNotification(seqNumber: Long): Boolean {
+        handledNotifications += seqNumber
+        return notificationFailures-- <= 0
+    }
     override fun euiccMemoryReset() {}
     override fun setNickname(iccid: String, nickname: String) {}
     override fun close() {}

@@ -11,6 +11,7 @@ import im.angry.openeuicc.core.usb.smartCard
 import im.angry.openeuicc.di.AppContainer
 import im.angry.openeuicc.util.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -301,6 +302,7 @@ open class DefaultEuiccChannelManager(
         resetChannels()
 
         withTimeout(timeoutMillis) {
+            var retryDelay = 250L
             while (true) {
                 try {
                     val channels = if (physicalSlotId == EuiccChannelManager.USB_CHANNEL_ID) {
@@ -317,14 +319,14 @@ open class DefaultEuiccChannelManager(
                     check(channels.all { it.valid }) { "Invalid channel" }
                     check(numChannelsBefore > 0 && channels.size >= numChannelsBefore) { "Less channels than before" }
                     break
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
-                    Log.d(
-                        TAG,
-                        "Slot $physicalSlotId port $portId reconnect failure, retrying in 1000 ms"
-                    )
+                    Log.d(TAG, "Slot $physicalSlotId port $portId reconnect retry in $retryDelay ms")
                     resetChannels()
                 }
-                delay(1000)
+                delay(retryDelay)
+                retryDelay = minOf(retryDelay * 2, 1_000L)
             }
         }
     }

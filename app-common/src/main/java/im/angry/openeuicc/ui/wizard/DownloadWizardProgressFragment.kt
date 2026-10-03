@@ -103,8 +103,20 @@ class DownloadWizardProgressFragment : DownloadWizardActivity.DownloadWizardStep
                     is EuiccChannelManagerService.ForegroundTaskState.Done -> {
                         hideProgressBar()
 
-                        state.downloadError =
-                            it.error as? LocalProfileAssistant.ProfileDownloadException
+                        state.downloadError = when (val error = it.error) {
+                            null -> null
+                            is LocalProfileAssistant.ProfileDownloadException -> error
+                            else -> LocalProfileAssistant.ProfileDownloadException(
+                                "TASK_${error.javaClass.simpleName}", null, null, null, null
+                            )
+                        }
+
+                        if (state.downloadError != null && progressItems.none { item -> item.state == ProgressState.InProgress }) {
+                            progressItems.first().apply {
+                                state = ProgressState.Error
+                                errorMessage = SimplifiedErrorMessages.fromDownloadError(this@DownloadWizardProgressFragment.state.downloadError!!)
+                            }
+                        }
 
                         // Change the state of the last InProgress item to success (or error)
                         progressItems.forEachIndexed { index, progressItem ->
@@ -144,9 +156,6 @@ class DownloadWizardProgressFragment : DownloadWizardActivity.DownloadWizardStep
             // Set started to true even before we start -- in case we get killed in the middle
             state.downloadStarted = true
 
-            // NOTE: Keep using launchProfileDownload() here; the UI ↔ service
-            // contract it implements (launch + auto-confirm metadata via the back
-            // channel) is covered by DownloadTaskLauncherTest.
             val ret = launchProfileDownload(
                 euiccChannelManagerService,
                 euiccChannelManager,
@@ -226,10 +235,8 @@ class DownloadWizardProgressFragment : DownloadWizardActivity.DownloadWizardStep
                     icon.setImageResource(R.drawable.ic_error_outline)
                     icon.visibility = View.VISIBLE
 
-                    item.errorMessage?.titleResId?.let {
-                        errorTitle.visibility = View.VISIBLE
-                        errorTitle.text = getString(it)
-                    }
+                    errorTitle.visibility = View.VISIBLE
+                    errorTitle.text = getString(item.errorMessage?.titleResId ?: R.string.task_profile_download_failure)
                     item.errorMessage?.suggestResId?.let {
                         errorSuggestion.visibility = View.VISIBLE
                         errorSuggestion.text = getString(it)

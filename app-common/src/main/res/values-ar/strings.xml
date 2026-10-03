@@ -213,4 +213,6 @@
         <item>كفاءة عالية</item>
         <item>أعلى توافق</item>
     </string-array>
+    <string name="profile_retry">إعادة المحاولة</string>
+    <string name="profile_read_failed">تعذرت قراءة بطاقة eSIM. تحقق من اتصال البطاقة ثم أعد المحاولة.</string>
 </resources>

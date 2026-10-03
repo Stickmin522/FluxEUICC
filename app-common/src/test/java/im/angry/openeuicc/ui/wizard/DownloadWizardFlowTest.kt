@@ -153,7 +153,7 @@ class DownloadWizardFlowTest {
      * simulating the start command (Robolectric does not deliver
      * startForegroundService() on its own).
      */
-    private suspend fun startDownload() {
+    private suspend fun startDownload(deliverStart: Boolean = true) {
         // ---- Slot select: the mock manager exposes exactly one eUICC ----
         val slotList = activity.findViewById<RecyclerView>(R.id.download_slot_list)
         awaitMainLooper { (slotList.adapter?.itemCount ?: 0) > 0 }
@@ -186,14 +186,14 @@ class DownloadWizardFlowTest {
         clickNext()
         assertTrue(currentFragment() is DownloadWizardProgressFragment)
 
-        // The service self-starts via startForegroundService(); Robolectric does
-        // not deliver that to onStartCommand() on its own (see
-        // DownloadTaskLauncherTest), so simulate the system call once the task
-        // has had a chance to subscribe to foregroundStarted. The mock manager
-        // having resolved the logical slot proves the launch has been reached.
-        awaitMainLooper { manager.logicalChannelRequests.isNotEmpty() }
-        idle()
-        service.onStartCommand(Intent(), 0, 1)
+        var startIntent: Intent? = null
+        awaitMainLooper {
+            shadowOf(RuntimeEnvironment.getApplication()).nextStartedService?.let {
+                if (it.hasExtra("taskId")) startIntent = it
+            }
+            startIntent != null
+        }
+        if (deliverStart) service.onStartCommand(startIntent, 0, 1)
         idle()
     }
 
@@ -227,6 +227,16 @@ class DownloadWizardFlowTest {
         val holder = progressItemHolder(position)
         val errorTitle = holder.itemView.findViewById<TextView>(R.id.download_progress_item_error_title)
         assertEquals("step $position should show the error message", View.VISIBLE, errorTitle.visibility)
+    }
+
+    @Test
+    fun startupTimeoutIsShownAsDownloadFailure() = runBlocking {
+        startDownload(deliverStart = false)
+        shadowOf(Looper.getMainLooper()).idleFor(31, java.util.concurrent.TimeUnit.SECONDS)
+        awaitMainLooper { currentFragment()?.hasNext == true }
+        assertProgressItemError(0)
+        clickNext()
+        assertTrue(currentFragment() is DownloadWizardDiagnosticsFragment)
     }
 
     @Test

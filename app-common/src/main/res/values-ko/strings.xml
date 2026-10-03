@@ -213,4 +213,6 @@
         <item>고효율</item>
         <item>최대 호환성</item>
     </string-array>
+    <string name="profile_retry">다시 시도</string>
+    <string name="profile_read_failed">eSIM 카드를 읽을 수 없습니다. 카드 연결을 확인한 후 다시 시도하세요.</string>
 </resources>

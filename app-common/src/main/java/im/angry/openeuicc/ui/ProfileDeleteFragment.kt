@@ -12,6 +12,7 @@ import im.angry.openeuicc.common.R
 import im.angry.openeuicc.core.EuiccChannel
 import im.angry.openeuicc.service.EuiccChannelManagerService.Companion.waitDone
 import im.angry.openeuicc.util.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
@@ -87,16 +88,26 @@ class ProfileDeleteFragment : DialogFragment(), EuiccChannelFragmentMarker {
         alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
         alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled = false
 
-        requireParentFragment().lifecycleScope.launch {
-            ensureEuiccChannelManager()
-            euiccChannelManagerService.waitForForegroundTask()
-            euiccChannelManagerService.launchProfileDeleteTask(slotId, portId, seId, iccid)
-                .stateFlow
-                .onStart {
-                    parentFragment?.notifyEuiccProfilesChanged()
-                    runCatching(::dismiss)
+        val parent = requireParentFragment()
+        parent.lifecycleScope.launch {
+            try {
+                ensureEuiccChannelManager()
+                euiccChannelManagerService.waitForForegroundTask()
+                val error = euiccChannelManagerService.launchProfileDeleteTask(slotId, portId, seId, iccid)
+                    .stateFlow.onStart { runCatching(::dismiss) }.waitDone()
+                if (error != null && parent.isAdded) {
+                    Toast.makeText(parent.requireContext(), R.string.task_profile_delete_failure, Toast.LENGTH_LONG).show()
                 }
-                .waitDone()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                if (parent.isAdded) {
+                    Toast.makeText(parent.requireContext(), R.string.task_profile_delete_failure, Toast.LENGTH_LONG).show()
+                }
+            } finally {
+                runCatching(::dismiss)
+                parent.notifyEuiccProfilesChanged()
+            }
         }
     }
 }

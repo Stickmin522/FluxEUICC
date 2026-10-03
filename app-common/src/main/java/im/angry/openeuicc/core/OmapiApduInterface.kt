@@ -66,14 +66,14 @@ class OmapiApduInterface(
         check(channel != null) { "Invalid logical channel handle $handle" }
 
         if (runBlocking { verboseLoggingFlow.first() }) {
-            Log.d(TAG, "OMAPI APDU: ${tx.encodeHex()}")
+            Log.d(TAG, "OMAPI command: ${tx.take(4).toByteArray().encodeHex()}, bytes=${tx.size}")
         }
 
         try {
             for (i in 0..10) {
                 val res = channel.transmit(tx)
                 if (runBlocking { verboseLoggingFlow.first() }) {
-                    Log.d(TAG, "OMAPI APDU response: ${res.encodeHex()}")
+                    Log.d(TAG, "OMAPI response: bytes=${res.size}, status=${res.takeLast(2).toByteArray().encodeHex()}")
                 }
 
                 if (res.size == 2 && res[0] == 0x66.toByte() && res[1] == 0x01.toByte()) {

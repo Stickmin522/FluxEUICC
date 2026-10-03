@@ -206,7 +206,6 @@ open class MainActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
             euiccChannelManager.flowEuiccSecureElements(slotId, portId).onEach { seId ->
                 euiccChannelManager.withEuiccChannel(slotId, portId, seId) { channel ->
                     if (preferenceRepository.verboseLoggingFlow.first()) {
-                        Log.d(TAG, channel.lpa.eID)
                     }
                     // Request the system to refresh the list of profiles every time we start
                     // Note that this is currently supposed to be no-op when unprivileged,

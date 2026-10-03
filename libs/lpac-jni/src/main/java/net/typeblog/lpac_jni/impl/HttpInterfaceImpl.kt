@@ -22,7 +22,10 @@ import javax.net.ssl.TrustManagerFactory
 class HttpInterfaceImpl(
     private val verboseLoggingFlow: Flow<Boolean>,
     private val ignoreTLSCertificateFlow: Flow<Boolean>,
-    private val httpProxyFlow: Flow<String>
+    private val httpProxyFlow: Flow<String>,
+    private val connectionFactory: (URL, Uri) -> HttpsURLConnection = { url, proxy ->
+        url.openProxiedConnection(proxy) as HttpsURLConnection
+    }
 ) : HttpInterface {
     companion object {
         private const val TAG = "HttpInterfaceImpl"
@@ -35,10 +38,8 @@ class HttpInterfaceImpl(
         tx: ByteArray,
         headers: Array<String>
     ): HttpInterface.HttpResponse {
-        Log.d(TAG, "transmit(url = $url)")
-
         if (runBlocking { verboseLoggingFlow.first() }) {
-            Log.d(TAG, "HTTP tx = ${tx.decodeToString(throwOnInvalidSequence = false)}")
+            Log.d(TAG, "HTTP POST: ${tx.size} bytes")
         }
 
         val parsedUrl = URL(url)
@@ -46,11 +47,11 @@ class HttpInterfaceImpl(
             throw IllegalArgumentException("SM-DP+ servers must use the HTTPS protocol")
         }
 
+        val proxy = runBlocking { httpProxyFlow.first().toUri().normalizeScheme() }
+        val conn = connectionFactory(parsedUrl, proxy)
         try {
-            val proxy = runBlocking { httpProxyFlow.first().toUri().normalizeScheme() }
-            val conn = parsedUrl.openConnection(proxy) as HttpsURLConnection
-
-            conn.connectTimeout = 2000
+            conn.connectTimeout = 10_000
+            conn.readTimeout = 30_000
 
             if (url.contains("handleNotification")) {
                 conn.connectTimeout = 1000
@@ -67,25 +68,19 @@ class HttpInterfaceImpl(
                 conn.setRequestProperty(s[0], s[1])
             }
 
-            conn.outputStream.write(tx)
-            conn.outputStream.flush()
-            conn.outputStream.close()
-
-            Log.d(TAG, "transmit responseCode = ${conn.responseCode}")
-
-            val bytes = conn.inputStream.readBytes().also {
-                if (runBlocking { verboseLoggingFlow.first() }) {
-                    Log.d(
-                        TAG,
-                        "HTTP response body = ${it.decodeToString(throwOnInvalidSequence = false)}"
-                    )
-                }
+            conn.outputStream.use { it.write(tx) }
+            val status = conn.responseCode
+            val response = if (status >= 400) conn.errorStream else conn.inputStream
+            val bytes = response?.use { it.readBytes() } ?: byteArrayOf()
+            if (runBlocking { verboseLoggingFlow.first() }) {
+                Log.d(TAG, "HTTP response: status=$status, bytes=${bytes.size}")
             }
-
-            return HttpInterface.HttpResponse(conn.responseCode, bytes)
+            return HttpInterface.HttpResponse(status, bytes)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.w(TAG, "HTTP request failed: ${e.javaClass.simpleName}")
             throw e
+        } finally {
+            conn.disconnect()
         }
     }
 
@@ -101,22 +96,21 @@ class HttpInterfaceImpl(
         return sslContext.socketFactory
     }
 
-    private fun URL.openConnection(proxy: Uri): URLConnection {
-        if (proxy.scheme == null || proxy.host == null || proxy.port == -1) return openConnection()
-        val type = when (proxy.scheme) {
-            "http", "https" -> Proxy.Type.HTTP
-            "socks", "socks5" -> Proxy.Type.SOCKS
-            "direct" -> return openConnection(Proxy.NO_PROXY)
-            else -> return openConnection() // fallback to system proxy
-        }
-        val proxy = Proxy(type, /* sa = */ InetSocketAddress(/* hostname = */ proxy.host, proxy.port))
-        return openConnection(proxy)
-    }
-
     override fun usePublicKeyIds(pkids: Array<String>) {
         val trustManagerFactory = TrustManagerFactory.getInstance("PKIX").apply {
             init(keyIdToKeystore(pkids))
         }
         trustManagers = trustManagerFactory.trustManagers
     }
+}
+
+private fun URL.openProxiedConnection(proxy: Uri): URLConnection {
+    if (proxy.scheme == "direct") return openConnection(Proxy.NO_PROXY)
+    if (proxy.scheme == null || proxy.host == null || proxy.port == -1) return openConnection()
+    val type = when (proxy.scheme) {
+        "http", "https" -> Proxy.Type.HTTP
+        "socks", "socks5" -> Proxy.Type.SOCKS
+        else -> return openConnection()
+    }
+    return openConnection(Proxy(type, InetSocketAddress(proxy.host, proxy.port)))
 }
