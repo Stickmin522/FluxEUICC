@@ -24,13 +24,18 @@ android {
 
     defaultConfig {
         applicationId = "dev.codex.esimmanager17"
-        versionCode = 1790685451
-        versionName = "1.1.3"
+        versionCode = 2000000000
+        versionName = "2.0"
         minSdk = 28
         targetSdk = 37
         ndk {
             abiFilters += "arm64-v8a"
         }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     buildFeatures {
@@ -54,11 +59,12 @@ android {
 
 kotlin {
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_11
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 
 dependencies {
     implementation(project(":app-common"))
+    implementation(project(":flutter"))
     testImplementation("junit:junit:4.13.2")
 }

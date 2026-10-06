@@ -6,10 +6,11 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         google()
         mavenCentral()
+        maven("https://storage.googleapis.com/download.flutter.io")
     }
 }
 
@@ -28,3 +29,5 @@ include(":libs:lpac-jni")
 include(":app-common")
 include(":app-unpriv")
 include(":app-deps")
+
+apply(from = File(settingsDir, "flutter_ui/.android/include_flutter.groovy"))

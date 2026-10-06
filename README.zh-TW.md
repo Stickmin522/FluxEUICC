@@ -16,7 +16,7 @@ FluxEUICC 是一款基於 [OpenEUICC](https://gitea.angry.im/PeterCxy/OpenEUICC)
 
 ## 為什麼選擇 FluxEUICC
 
-- **現代、清楚的介面**：卡片式方案清單、直觀的啟用狀態與簡潔的選單，讓常用操作更容易找到；支援系統主題配色與自適應圖示。
+- **現代、清楚的介面**：卡片式方案清單、直觀的啟用狀態與簡潔的選單，讓常用操作更容易找到；採用柔和漸層，支援淺色、深色主題與自適應圖示。
 - **更即時的切換回饋**：最佳化方案切換後的重新連線等待，並提供清楚的操作結果提示，減少長時間等待帶來的不確定感。
 - **九種介面語言**：預設跟隨系統，也可選擇支援的語言，讓不同地區的使用者更容易使用。
 - **適合現代 Android 裝置**：針對 Android 17 設計，專注於 64 位元 ARM 裝置，支援現代 Android 的全螢幕配置與返回手勢。
@@ -36,7 +36,7 @@ FluxEUICC 是一款基於 [OpenEUICC](https://gitea.angry.im/PeterCxy/OpenEUICC)
 
 ## 下載與使用
 
-目前版本：**1.1.3**。前往 [下載頁面](https://github.com/Stickmin522/FluxEUICC/releases/latest) 取得 APK。
+目前版本：**2.0**。前往 [下載頁面](https://github.com/Stickmin522/FluxEUICC/releases/latest) 取得 APK。
 
 1. 在 Android 9 或更新版本的 64 位元 ARM 裝置上安裝應用程式。
 2. 插入相容於 OpenEUICC 的可拆卸 eSIM，或連接相容的 USB 讀卡機。

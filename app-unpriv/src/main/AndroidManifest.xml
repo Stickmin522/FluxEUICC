@@ -14,21 +14,49 @@
         android:theme="@style/Theme.OpenEUICC"
         tools:targetApi="tiramisu">
 
+        <meta-data android:name="flutterEmbedding" android:value="2" />
         <activity
-            android:name="im.angry.openeuicc.ui.UnprivilegedMainActivity"
+            android:name="im.angry.openeuicc.flutter.FluxFlutterActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:enableOnBackInvokedCallback="true"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="lpa" />
+                <data android:scheme="LPA" tools:ignore="AppLinkUrlError" />
+            </intent-filter>
         </activity>
-
-        <activity
-            android:name="im.angry.openeuicc.ui.QuickCompatibilityActivity"
-            android:exported="false"
-            android:label="@string/quick_compatibility" />
+        <activity-alias
+            android:name="im.angry.openeuicc.ui.UnprivilegedMainActivity"
+            android:exported="true"
+            android:targetActivity="im.angry.openeuicc.flutter.FluxFlutterActivity" />
+        <activity-alias
+            android:name="im.angry.openeuicc.ui.wizard.DownloadWizardActivity"
+            android:exported="true"
+            android:targetActivity="im.angry.openeuicc.flutter.FluxFlutterActivity" />
+        <activity-alias
+            android:name="im.angry.openeuicc.ui.DirectProfileDownloadActivity"
+            android:exported="true"
+            android:targetActivity="im.angry.openeuicc.flutter.FluxFlutterActivity"
+            tools:replace="android:targetActivity" />
+        <activity android:name="im.angry.openeuicc.ui.SettingsActivity" tools:node="remove" />
+        <activity android:name="im.angry.openeuicc.ui.LanguageSettingsActivity" tools:node="remove" />
+        <activity android:name="im.angry.openeuicc.ui.NotificationsActivity" tools:node="remove" />
+        <activity android:name="im.angry.openeuicc.ui.EuiccInfoActivity" tools:node="remove" />
+        <activity android:name="im.angry.openeuicc.ui.LogsActivity" tools:node="remove" />
+        <activity android:name="im.angry.openeuicc.ui.IsdrAidListActivity" tools:node="remove" />
+        <activity android:name="im.angry.openeuicc.ui.QuickCompatibilityActivity" tools:node="remove" />
+        <activity android:name="im.angry.openeuicc.ui.wizard.DownloadWizardActivity" tools:node="remove" />
+        <activity android:name="im.angry.openeuicc.ui.wizard.DeepLinkConfirmationActivity" tools:node="remove" />
 
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"

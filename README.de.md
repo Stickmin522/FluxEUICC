@@ -16,7 +16,7 @@ FluxEUICC ist eine Android-App zur Verwaltung herausnehmbarer eSIM-Karten und ba
 
 ## Warum FluxEUICC?
 
-- **Eine moderne, übersichtliche Oberfläche**: Profile als Karten, ein gut erkennbarer Aktivierungsstatus und einfache Menüs machen häufige Aktionen leicht zugänglich. Systemfarben und adaptive Symbole passen die App an Ihr Gerät an.
+- **Eine moderne, übersichtliche Oberfläche**: Profile als Karten, ein gut erkennbarer Aktivierungsstatus und einfache Menüs machen häufige Aktionen leicht zugänglich. Sanfte Farbverläufe, helle und dunkle Designs sowie adaptive Symbole passen die App an Ihr Gerät an.
 - **Schnellere Rückmeldung beim Profilwechsel**: optimierte Wartezeiten bei der erneuten Verbindung nach einem Wechsel und klare Ergebnisse verringern die Unsicherheit bei längeren Wartezeiten.
 - **Neun Sprachen für die Oberfläche**: Die App übernimmt standardmäßig die Systemsprache. Alternativ können Sie eine unterstützte Sprache auswählen.
 - **Für moderne Android-Geräte entwickelt**: auf Android 17 abgestimmt und auf 64-Bit-ARM-Geräte ausgerichtet, mit randfüllender Darstellung und Unterstützung der Zurück-Geste.
@@ -36,7 +36,7 @@ Wenn die Systemsprache nicht unterstützt wird, erscheint die Oberfläche auf En
 
 ## Download und erste Schritte
 
-Aktuelle Version: **1.1.3**. Laden Sie die APK von der [Downloadseite](https://github.com/Stickmin522/FluxEUICC/releases/latest) herunter.
+Aktuelle Version: **2.0**. Laden Sie die APK von der [Downloadseite](https://github.com/Stickmin522/FluxEUICC/releases/latest) herunter.
 
 1. Installieren Sie die App auf einem 64-Bit-ARM-Gerät mit Android 9 oder neuer.
 2. Legen Sie eine mit OpenEUICC kompatible, herausnehmbare eSIM ein oder schließen Sie ein kompatibles USB-Lesegerät an.

@@ -1,0 +1,28 @@
+name: flutter_ui
+description: FluxEUICC Android interface.
+publish_to: none
+version: 2.0.0+2000000000
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  mobile_scanner: 7.4.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/i18n/
+  module:
+    androidX: true
+    androidPackage: im.fluxeuicc.flutter_ui
+    iosBundleIdentifier: im.fluxeuicc.flutterUi

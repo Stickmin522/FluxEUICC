@@ -16,7 +16,7 @@ FluxEUICC est une application Android de gestion des cartes eSIM amovibles, bas�
 
 ## Pourquoi choisir FluxEUICC ?
 
-- **Une interface moderne et claire** : des profils présentés sous forme de cartes, un état d’activation visible et des menus simples rendent les actions courantes faciles à trouver. Les couleurs du thème système et les icônes adaptatives permettent à l’application de s’intégrer à votre appareil.
+- **Une interface moderne et claire** : des profils présentés sous forme de cartes, un état d’activation visible et des menus simples rendent les actions courantes faciles à trouver. Des dégradés doux, des thèmes clair et sombre et des icônes adaptatives permettent à l’application de s’intégrer à votre appareil.
 - **Un retour d’information plus rapide** : l’attente de reconnexion après un changement de profil est optimisée, et les résultats sont clairement indiqués pour réduire l’incertitude pendant les longues attentes.
 - **Une interface en neuf langues** : l’application suit la langue du système par défaut, ou vous laisse choisir une langue prise en charge.
 - **Pensée pour les appareils Android modernes** : adaptée à Android 17 et aux appareils 64 bits, avec un affichage bord à bord et la prise en charge du geste de retour.
@@ -36,7 +36,7 @@ L’interface s’affiche en anglais lorsque la langue du système n’est pas p
 
 ## Téléchargement et premiers pas
 
-Version actuelle : **1.1.3**. Téléchargez l’APK sur la [page de téléchargement](https://github.com/Stickmin522/FluxEUICC/releases/latest).
+Version actuelle : **2.0**. Téléchargez l’APK sur la [page de téléchargement](https://github.com/Stickmin522/FluxEUICC/releases/latest).
 
 1. Installez l’application sur un appareil ARM 64 bits équipé d’Android 9 ou d’une version ultérieure.
 2. Insérez une eSIM amovible compatible avec OpenEUICC ou connectez un lecteur USB compatible.
