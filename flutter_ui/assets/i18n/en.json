@@ -281,5 +281,9 @@
   "ui_copy": "Copy",
   "ui_save": "Save",
   "ui_code_hint": "Paste or type the activation code from your provider.",
-  "ui_manual_hint": "Enter the SM-DP+ address and activation details."
+  "ui_manual_hint": "Enter the SM-DP+ address and activation details.",
+  "ui_change_icon": "Change icon",
+  "ui_icon_gallery": "Choose from gallery",
+  "ui_icon_camera": "Take a photo",
+  "ui_icon_reset": "Restore default icon"
 }

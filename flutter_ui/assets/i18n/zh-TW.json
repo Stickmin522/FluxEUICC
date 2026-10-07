@@ -281,5 +281,9 @@
   "ui_copy": "複製",
   "ui_save": "儲存",
   "ui_code_hint": "貼上或輸入電信業者提供的啟用碼。",
-  "ui_manual_hint": "填寫 SM-DP+ 位址和啟用資訊。"
+  "ui_manual_hint": "填寫 SM-DP+ 位址和啟用資訊。",
+  "ui_change_icon": "更換圖示",
+  "ui_icon_gallery": "從相簿選擇",
+  "ui_icon_camera": "拍攝照片",
+  "ui_icon_reset": "還原預設圖示"
 }

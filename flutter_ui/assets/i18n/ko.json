@@ -281,5 +281,9 @@
   "ui_copy": "복사",
   "ui_save": "저장",
   "ui_code_hint": "통신사에서 받은 활성화 코드를 붙여 넣거나 입력하세요.",
-  "ui_manual_hint": "SM-DP+ 주소와 활성화 정보를 입력하세요."
+  "ui_manual_hint": "SM-DP+ 주소와 활성화 정보를 입력하세요.",
+  "ui_change_icon": "아이콘 변경",
+  "ui_icon_gallery": "갤러리에서 선택",
+  "ui_icon_camera": "사진 촬영",
+  "ui_icon_reset": "기본 아이콘으로 복원"
 }

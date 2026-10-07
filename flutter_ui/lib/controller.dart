@@ -139,6 +139,37 @@ class EuiccController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setProfileIcon(Json profile, String source) async {
+    if (selected == null || busy || reading || scanning) return;
+    final card = Map<String, dynamic>.from(selected!);
+    reading = true;
+    notifyListeners();
+    try {
+      final result = json(
+        await invoke('profileIcon', {
+          ...cardArgs,
+          'iccid': profile['iccid'],
+          'source': source,
+        }),
+      );
+      if (result['changed'] == true &&
+          sameCard(selected, card) &&
+          selected?['eid'] == card['eid']) {
+        profiles = [
+          for (final item in profiles)
+            if (item['iccid'] == profile['iccid'])
+              {...item, 'customIcon': result['customIcon']}
+            else
+              item,
+        ];
+        selected = {...selected!, 'profiles': profiles};
+      }
+    } finally {
+      reading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> startTask(String kind, Json arguments) async {
     if (busy) return;
     task = {'kind': kind, 'running': true, 'phase': 'Preparing', 'progress': 0};

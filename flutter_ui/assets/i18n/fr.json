@@ -281,5 +281,9 @@
   "ui_copy": "Copier",
   "ui_save": "Enregistrer",
   "ui_code_hint": "Collez ou saisissez le code d’activation fourni par votre opérateur.",
-  "ui_manual_hint": "Saisissez l’adresse SM-DP+ et les informations d’activation."
+  "ui_manual_hint": "Saisissez l’adresse SM-DP+ et les informations d’activation.",
+  "ui_change_icon": "Changer l’icône",
+  "ui_icon_gallery": "Choisir dans la galerie",
+  "ui_icon_camera": "Prendre une photo",
+  "ui_icon_reset": "Rétablir l’icône par défaut"
 }

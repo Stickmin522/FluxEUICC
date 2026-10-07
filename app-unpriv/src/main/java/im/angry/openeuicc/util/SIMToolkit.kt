@@ -24,15 +24,23 @@ class SIMToolkit(private val context: Context) {
         get() = listOf(get(0), get(1))
 
     operator fun get(slotId: Int): Intent? {
-        if (slotId == -1 || slotId == EuiccChannelManager.USB_CHANNEL_ID) return null
+        if (slotId < 0 || slotId == EuiccChannelManager.USB_CHANNEL_ID) return null
+        val miui = Intent("miui.intent.action.StkMainHide")
+            .setComponent(ComponentName("com.android.stk", "com.android.stk.StkMainHide"))
         val intents = (slots[slotId] ?: emptyList()) + slots[-1]!!
-        val packageNames = intents.mapNotNull(Intent::getPackage).toSet()
-        return getIntent(context.packageManager, intents) // try to find an exported activity first
-            ?: getLaunchIntent(context.packageManager, packageNames) // fallback to launch intent
-            ?: getDisabledPackageIntent(context.packageManager, packageNames) // app settings if disabled
+        val packageNames = intents.mapNotNull { it.component?.packageName ?: it.`package` }.toSet()
+        val intent = getIntent(context.packageManager, listOf(miui) + intents)
+            ?: getLaunchIntent(context.packageManager, packageNames)
+            ?: return getDisabledPackageIntent(context.packageManager, packageNames)
+        return Intent(intent).apply {
+            putExtra("slot_id", slotId)
+            putExtra("SLOT_ID", slotId)
+            putExtra("android.telephony.extra.SLOT_INDEX", slotId)
+        }
     }
 
-    fun isSelection(intent: Intent) = intent in slots[-1]!!
+    fun isSelection(intent: Intent) = intent.component?.className != "com.android.stk.StkMainHide" &&
+        slots[-1]!!.any { it.component == intent.component }
 
     companion object {
         fun getDisabledPackageName(intent: Intent?): String? {
@@ -44,7 +52,9 @@ class SIMToolkit(private val context: Context) {
 
 
 private fun getIntent(packageManager: PackageManager, intents: Iterable<Intent>) =
-    intents.firstOrNull { it.resolveActivityInfo(packageManager, 0)?.exported ?: false }
+    intents.firstOrNull {
+        runCatching { it.resolveActivityInfo(packageManager, 0)?.exported == true }.getOrDefault(false)
+    }
 
 private fun getLaunchIntent(packageManager: PackageManager, packageNames: Iterable<String>) =
     packageNames.firstNotNullOfOrNull(packageManager::getLaunchIntentForPackage)
@@ -56,7 +66,7 @@ private fun getDisabledPackageIntent(packageManager: PackageManager, packageName
 }
 
 private fun PackageManager.isDisabledState(packageName: String) =
-    when (getApplicationEnabledSetting(packageName)) {
+    when (runCatching { getApplicationEnabledSetting(packageName) }.getOrNull()) {
         PackageManager.COMPONENT_ENABLED_STATE_DISABLED -> true
         PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER -> true
         else -> false

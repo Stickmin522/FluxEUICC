@@ -36,7 +36,7 @@ La interfaz se muestra en inglés cuando el idioma del sistema no está disponib
 
 ## Descarga y primeros pasos
 
-Versión actual: **2.0.1**. Descarga el APK desde la [página de descargas](https://github.com/Stickmin522/FluxEUICC/releases/latest).
+Versión actual: **2.0.2**. Descarga el APK desde la [página de descargas](https://github.com/Stickmin522/FluxEUICC/releases/latest).
 
 1. Instala la aplicación en un dispositivo ARM de 64 bits con Android 9 o posterior.
 2. Inserta una eSIM extraíble compatible con OpenEUICC o conecta un lector USB compatible.

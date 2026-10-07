@@ -38,6 +38,19 @@ METHOD_HINTS = {
 }
 
 
+ICON_TEXT = {
+    "en": ["Change icon", "Choose from gallery", "Take a photo", "Restore default icon"],
+    "zh-CN": ["更换图标", "从图库选择", "拍摄照片", "恢复默认图标"],
+    "zh-TW": ["更換圖示", "從相簿選擇", "拍攝照片", "還原預設圖示"],
+    "ja": ["アイコンを変更", "写真から選択", "写真を撮影", "標準のアイコンに戻す"],
+    "ko": ["아이콘 변경", "갤러리에서 선택", "사진 촬영", "기본 아이콘으로 복원"],
+    "ar": ["تغيير الأيقونة", "اختيار من المعرض", "التقاط صورة", "استعادة الأيقونة الافتراضية"],
+    "fr": ["Changer l’icône", "Choisir dans la galerie", "Prendre une photo", "Rétablir l’icône par défaut"],
+    "de": ["Symbol ändern", "Aus Galerie auswählen", "Foto aufnehmen", "Standardsymbol wiederherstellen"],
+    "es": ["Cambiar icono", "Elegir de la galería", "Tomar una foto", "Restaurar el icono predeterminado"],
+}
+
+
 def read_values(directory):
     values = {}
     for module in ("app-common", "app-unpriv"):
@@ -58,5 +71,6 @@ if __name__ == "__main__":
     for language, directory in LANGUAGES.items():
         values = english | read_values(directory) | dict(zip(KEYS, TEXT[language]))
         values |= dict(zip(["ui_code_hint", "ui_manual_hint"], METHOD_HINTS[language]))
+        values |= dict(zip(["ui_change_icon", "ui_icon_gallery", "ui_icon_camera", "ui_icon_reset"], ICON_TEXT[language]))
         values = {key: re.sub(r"\besim\b", "eSIM", value, flags=re.I) for key, value in values.items()}
         (destination / f"{language}.json").write_text(json.dumps(values, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

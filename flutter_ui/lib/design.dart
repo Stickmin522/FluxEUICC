@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/services.dart';
 
 import 'controller.dart';
+import 'marquee.dart';
 import 'strings.dart';
 
 const flowPurple = Color(0xFF7655EF);
@@ -287,54 +288,100 @@ class CardSelector extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return Align(
       alignment: AlignmentDirectional.centerStart,
-      child: PopupMenuButton<int>(
-        enabled: enabled,
-        tooltip: context.s('download_wizard_slot_select'),
-        onSelected: (index) => controller.select(controller.cards[index]),
-        itemBuilder: (_) => [
-          for (var i = 0; i < controller.cards.length; i++)
-            PopupMenuItem(
-              value: i,
-              child: ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: SlotGlyph(usb: controller.cards[i]['usb'] == true),
-                title: Text('${controller.cards[i]['title']}'),
-                subtitle: Text(
-                  '${controller.cards[i]['active'] ?? context.s('no_profile')}',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: EuiccController.sameCard(controller.cards[i], card)
-                    ? Icon(Icons.check_rounded, color: colors.primary)
-                    : null,
-              ),
-            ),
-        ],
-        child: Material(
-          color: colors.surface.withValues(alpha: .45),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(26),
-            side: BorderSide(color: colors.primary.withValues(alpha: .22)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SlotGlyph(usb: card['usb'] == true),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Text(
-                    '${card['title']}',
-                    style: Theme.of(context).textTheme.titleMedium,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = (MediaQuery.sizeOf(context).width / 2).clamp(
+            0.0,
+            constraints.maxWidth,
+          );
+          return SizedBox(
+            key: const Key('card-selector-width'),
+            width: width,
+            child: PopupMenuButton<int>(
+              constraints: BoxConstraints.tightFor(width: width),
+              enabled: enabled,
+              tooltip: context.s('download_wizard_slot_select'),
+              onSelected: (index) => controller.select(controller.cards[index]),
+              itemBuilder: (_) => [
+                for (var i = 0; i < controller.cards.length; i++)
+                  PopupMenuItem(
+                    value: i,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Row(
+                        children: [
+                          SlotGlyph(usb: controller.cards[i]['usb'] == true),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                OneShotMarquee(
+                                  '${controller.cards[i]['title']}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium,
+                                ),
+                                const SizedBox(height: 4),
+                                OneShotMarquee(
+                                  '${controller.cards[i]['active'] ?? context.s('no_profile')}',
+                                  style: TextStyle(
+                                    color: colors.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          if (EuiccController.sameCard(
+                            controller.cards[i],
+                            card,
+                          ))
+                            Icon(
+                              Icons.check_rounded,
+                              size: 20,
+                              color: colors.primary,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+              child: Material(
+                color: colors.surface.withValues(alpha: .45),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(26),
+                  side: BorderSide(
+                    color: colors.primary.withValues(alpha: .22),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Icon(Icons.expand_more_rounded, color: colors.primary),
-              ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SlotGlyph(usb: card['usb'] == true),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OneShotMarquee(
+                          '${card['title']}',
+                          style: Theme.of(context).textTheme.titleMedium,
+                          animate: false,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(Icons.expand_more_rounded, color: colors.primary),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -410,14 +457,19 @@ class _ProfileGlyphState extends State<ProfileGlyph> {
   @override
   void initState() {
     super.initState();
-    bytes = profileIconBytes(widget.profile['icon'] as String?);
+    bytes = profileIconBytes(
+      (widget.profile['customIcon'] ?? widget.profile['icon']) as String?,
+    );
   }
 
   @override
   void didUpdateWidget(ProfileGlyph old) {
     super.didUpdateWidget(old);
-    if (old.profile['icon'] != widget.profile['icon']) {
-      bytes = profileIconBytes(widget.profile['icon'] as String?);
+    if (old.profile['icon'] != widget.profile['icon'] ||
+        old.profile['customIcon'] != widget.profile['customIcon']) {
+      bytes = profileIconBytes(
+        (widget.profile['customIcon'] ?? widget.profile['icon']) as String?,
+      );
     }
   }
 

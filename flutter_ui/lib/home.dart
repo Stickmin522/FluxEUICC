@@ -30,6 +30,32 @@ class HomePage extends StatelessWidget {
             'name': value,
           });
         }
+      } else if (action == 'icon') {
+        final source = await showDialog<String>(
+          context: context,
+          builder: (dialog) => SimpleDialog(
+            title: Text(context.s('ui_change_icon')),
+            children: [
+              for (final option in [
+                ('gallery', Icons.photo_library_outlined, 'ui_icon_gallery'),
+                ('camera', Icons.camera_alt_outlined, 'ui_icon_camera'),
+                ('reset', Icons.restore_rounded, 'ui_icon_reset'),
+              ])
+                SimpleDialogOption(
+                  onPressed: () => Navigator.pop(dialog, option.$1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  child: MenuLabel(
+                    icon: option.$2,
+                    label: context.s(option.$3),
+                  ),
+                ),
+            ],
+          ),
+        );
+        if (source != null) await controller.setProfileIcon(profile, source);
       } else if (action == 'delete') {
         final value = await editValue(
           context,
@@ -89,9 +115,7 @@ class HomePage extends StatelessWidget {
                     );
                   case 'toolkit':
                     controller.guard(() async {
-                      await controller.invoke('toolkit', {
-                        'slot': card!['slot'],
-                      });
+                      await controller.invoke('toolkit', controller.cardArgs);
                     });
                   case 'reset':
                     _reset(context);
@@ -379,6 +403,13 @@ class _ProfileCardState extends State<ProfileCard> {
                             child: MenuLabel(
                               icon: Icons.edit_outlined,
                               label: context.s('profile_rename'),
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'icon',
+                            child: MenuLabel(
+                              icon: Icons.add_photo_alternate_outlined,
+                              label: context.s('ui_change_icon'),
                             ),
                           ),
                           if (!active)

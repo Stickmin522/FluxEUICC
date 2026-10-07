@@ -18,6 +18,7 @@ import android.net.Uri
 import android.telephony.TelephonyManager
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -60,6 +61,29 @@ class EuiccFlutterBridge(private val activity: FluxFlutterActivity) : EventChann
     private var usbDevice: UsbDevice? = null
     private var usbPermission: CompletableDeferred<Boolean>? = null
     private var imageResult: CompletableDeferred<String?>? = null
+    private var iconResult: CompletableDeferred<String?>? = null
+    private var cameraPermissionResult: CompletableDeferred<Boolean>? = null
+    private val profileIcons = ProfileIconStore(activity)
+    private val iconPicker = activity.registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        val pending = iconResult ?: return@registerForActivityResult
+        scope.launch {
+            try {
+                pending.complete(uri?.let { withContext(Dispatchers.IO) { profileIcons.read(it) } })
+            } catch (e: Exception) { pending.completeExceptionally(e) }
+        }
+    }
+    private val iconCamera = activity.registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        val pending = iconResult
+        scope.launch {
+            try {
+                pending?.complete(bitmap?.let { withContext(Dispatchers.IO) { profileIcons.encode(it) } })
+            } catch (e: Exception) { pending?.completeExceptionally(e) }
+            finally { bitmap?.recycle() }
+        }
+    }
+    private val cameraPermission = activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+        cameraPermissionResult?.complete(it)
+    }
     private var exportResult: CompletableDeferred<Boolean>? = null
     private var exportText = ""
     private var exportedUri: Uri? = null
@@ -186,6 +210,7 @@ class EuiccFlutterBridge(private val activity: FluxFlutterActivity) : EventChann
             "scan" -> cardAccess { scan() }
             "lowBattery" -> DownloadWizardLowPowerFragment.isBatteryLow(activity)
             "profiles" -> cardAccess { withCard(args) { cardData(it, profiles = true) } }
+            "profileIcon" -> changeProfileIcon(args)
             "info" -> cardAccess { withCard(args) { info(it) } }
             "notifications" -> cardAccess {
                 withCard(args) { channel ->
@@ -288,7 +313,9 @@ class EuiccFlutterBridge(private val activity: FluxFlutterActivity) : EventChann
                 null
             }
             "toolkit" -> {
-                val slot = (args["slot"] as Number).toInt()
+                val slot = cardAccess { withCard(args) { channel ->
+                    SimSlotResolver.readerSlot((channel.apduInterface as? OmapiApduInterface)?.readerName)
+                } } ?: throw BridgeFailure("operation_failed")
                 val intent = SIMToolkit(activity)[slot] ?: throw BridgeFailure("operation_failed")
                 activity.startActivity(intent)
                 null
@@ -333,29 +360,32 @@ class EuiccFlutterBridge(private val activity: FluxFlutterActivity) : EventChann
         val active = cardProfiles.enabled
         val eid = channel.lpa.eID
         val reader = (channel.apduInterface as? OmapiApduInterface)?.readerName
-        val systemSlot = if (reader != null) {
+        val systemSlot = SimSlotResolver.readerSlot(reader)
+        val physicalSlot = if (reader != null) {
             SimSlotResolver.resolve(reader, systemSimSlots(), eid, active?.iccid)
         } else null
         val unfiltered = prefs.unfilteredProfileListFlow.first()
         val canDisable = channel.slotId == EuiccChannelManager.USB_CHANNEL_ID || prefs.disableSafeguardFlow.first()
         val title = when {
             channel.slotId == EuiccChannelManager.USB_CHANNEL_ID -> "USB"
-            systemSlot != null -> "SIM ${systemSlot + 1}"
+            systemSlot != null -> "SIM $systemSlot"
             else -> "eUICC"
         }
         return buildMap {
             put("slot", channel.slotId); put("port", channel.portId); put("se", channel.seId.id)
             put("logicalSlot", channel.logicalSlotId)
             put("systemSlot", systemSlot)
+            put("physicalSlot", physicalSlot)
             put("title", title + if (channel.hasMultipleSE) " · SE ${channel.seId.id}" else "")
             put("eid", eid)
             put("active", active?.displayName)
             put("freeSpace", channel.lpa.euiccInfo2?.freeNvram?.let(::formatFreeSpace))
             put("usb", channel.slotId == EuiccChannelManager.USB_CHANNEL_ID)
-            put("toolkit", SIMToolkit(activity)[channel.slotId] != null)
+            put("toolkit", systemSlot != null && SIMToolkit(activity)[systemSlot] != null)
             if (profiles) put("profiles", (if (unfiltered) cardProfiles else cardProfiles.operational).map { mapOf(
                 "iccid" to it.iccid, "name" to it.displayName, "provider" to it.providerName,
                 "icon" to it.icon,
+                "customIcon" to profileIcons.get(eid, it.iccid),
                 "enabled" to it.isEnabled, "class" to it.profileClass.name,
                 "showClass" to unfiltered,
                 "canEnable" to (active == null || active.profileClass == it.profileClass),
@@ -374,10 +404,46 @@ class EuiccFlutterBridge(private val activity: FluxFlutterActivity) : EventChann
                             card.eid, port.iccId)
                     }.ifEmpty { listOf(SystemSimSlot(card.physicalSlotIndex, null, card.eid)) }
                 } else {
-                    listOf(SystemSimSlot(card.physicalSlotIndex, null, card.eid, card.iccId))
+                    @Suppress("DEPRECATION")
+                    listOf(SystemSimSlot(card.slotIndex, null, card.eid, card.iccId))
                 }
             }
         }.getOrDefault(emptyList())
+    }
+
+    private suspend fun changeProfileIcon(args: Map<*, *>): Map<String, Any?> {
+        if (iconResult != null) throw BridgeFailure("busy")
+        val iccid = args["iccid"] as String
+        val source = args["source"] as String
+        require(source in setOf("gallery", "camera", "reset"))
+        val pending = CompletableDeferred<String?>()
+        iconResult = pending
+        try {
+            val eid = cardAccess { withCard(args) { channel ->
+                if (channel.lpa.profiles.none { it.iccid == iccid }) throw BridgeFailure("download_wizard_slot_removed")
+                channel.lpa.eID
+            } }
+            if (source == "reset") {
+                withContext(Dispatchers.IO) { profileIcons.set(eid, iccid, null) }
+                return mapOf("changed" to true, "customIcon" to null)
+            }
+            if (source == "camera") {
+                if (ContextCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                    val permission = CompletableDeferred<Boolean>()
+                    cameraPermissionResult = permission
+                    try {
+                        cameraPermission.launch(Manifest.permission.CAMERA)
+                        if (!permission.await()) return mapOf("changed" to false)
+                    } finally { cameraPermissionResult = null }
+                }
+                iconCamera.launch(null)
+            } else {
+                iconPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            }
+            val encoded = pending.await() ?: return mapOf("changed" to false)
+            withContext(Dispatchers.IO) { profileIcons.set(eid, iccid, encoded) }
+            return mapOf("changed" to true, "customIcon" to encoded)
+        } finally { iconResult = null }
     }
 
     private suspend fun startTask(args: Map<*, *>): Long {
@@ -582,6 +648,8 @@ class EuiccFlutterBridge(private val activity: FluxFlutterActivity) : EventChann
 
     fun close() {
         taskJob?.cancel()
+        iconResult?.cancel()
+        cameraPermissionResult?.cancel()
         activity.unregisterReceiver(receiver)
         methods?.setMethodCallHandler(null)
         events?.setStreamHandler(null)

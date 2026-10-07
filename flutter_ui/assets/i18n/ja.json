@@ -281,5 +281,9 @@
   "ui_copy": "コピー",
   "ui_save": "保存",
   "ui_code_hint": "通信事業者のアクティベーションコードを貼り付けるか入力します。",
-  "ui_manual_hint": "SM-DP+ アドレスとアクティベーション情報を入力します。"
+  "ui_manual_hint": "SM-DP+ アドレスとアクティベーション情報を入力します。",
+  "ui_change_icon": "アイコンを変更",
+  "ui_icon_gallery": "写真から選択",
+  "ui_icon_camera": "写真を撮影",
+  "ui_icon_reset": "標準のアイコンに戻す"
 }

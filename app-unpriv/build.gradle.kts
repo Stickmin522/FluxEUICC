@@ -24,8 +24,8 @@ android {
 
     defaultConfig {
         applicationId = "dev.codex.esimmanager17"
-        versionCode = 2000000001
-        versionName = "2.0.1"
+        versionCode = 2000000002
+        versionName = "2.0.2"
         minSdk = 28
         targetSdk = 37
         ndk {
@@ -40,6 +40,10 @@ android {
 
     buildFeatures {
         buildConfig = true
+    }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
     }
 
     buildTypes {
@@ -67,4 +71,5 @@ dependencies {
     implementation(project(":app-common"))
     implementation(project(":flutter"))
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.17-beta-4")
 }
