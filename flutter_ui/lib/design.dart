@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/services.dart';
@@ -51,6 +53,18 @@ ThemeData flowTheme(Brightness brightness) {
     ),
     dialogTheme: DialogThemeData(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+    ),
+    popupMenuTheme: PopupMenuThemeData(
+      color: colors.surfaceContainerLow,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: colors.primary.withValues(alpha: .18),
+      elevation: 8,
+      menuPadding: const EdgeInsets.all(8),
+      position: PopupMenuPosition.under,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: colors.primary.withValues(alpha: .12)),
+      ),
     ),
   );
 }
@@ -199,29 +213,285 @@ class FlowButton extends StatelessWidget {
   );
 }
 
-class SimGlyph extends StatelessWidget {
-  const SimGlyph({super.key, this.active = false, this.size = 54});
-  final bool active;
-  final double size;
+class MenuLabel extends StatelessWidget {
+  const MenuLabel({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.danger = false,
+  });
+  final IconData icon;
+  final String label;
+  final bool danger;
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final color = danger ? colors.error : colors.primary;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 20, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.titleSmall
+                  ?.copyWith(color: danger ? colors.error : null),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class SlotGlyph extends StatelessWidget {
+  const SlotGlyph({super.key, this.usb = false});
+  final bool usb;
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Container(
-      width: size,
-      height: size,
+      width: 32,
+      height: 32,
       decoration: BoxDecoration(
-        color: (active ? colors.primary : colors.onSurfaceVariant).withValues(
-          alpha: .09,
-        ),
-        borderRadius: BorderRadius.circular(17),
+        color: colors.primary.withValues(alpha: .08),
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Icon(
-        Icons.sim_card_outlined,
-        size: size * .58,
-        color: active ? colors.primary : colors.onSurfaceVariant,
+      child: usb
+          ? Icon(Icons.usb_rounded, color: colors.primary, size: 22)
+          : CustomPaint(painter: _SlotPainter(colors.primary, colors.surface)),
+    );
+  }
+}
+
+class CardSelector extends StatelessWidget {
+  const CardSelector({
+    super.key,
+    required this.controller,
+    this.enabled = true,
+  });
+  final EuiccController controller;
+  final bool enabled;
+  @override
+  Widget build(BuildContext context) {
+    final card = controller.selected!;
+    final colors = Theme.of(context).colorScheme;
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: PopupMenuButton<int>(
+        enabled: enabled,
+        tooltip: context.s('download_wizard_slot_select'),
+        onSelected: (index) => controller.select(controller.cards[index]),
+        itemBuilder: (_) => [
+          for (var i = 0; i < controller.cards.length; i++)
+            PopupMenuItem(
+              value: i,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: SlotGlyph(usb: controller.cards[i]['usb'] == true),
+                title: Text('${controller.cards[i]['title']}'),
+                subtitle: Text(
+                  '${controller.cards[i]['active'] ?? context.s('no_profile')}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: EuiccController.sameCard(controller.cards[i], card)
+                    ? Icon(Icons.check_rounded, color: colors.primary)
+                    : null,
+              ),
+            ),
+        ],
+        child: Material(
+          color: colors.surface.withValues(alpha: .45),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(26),
+            side: BorderSide(color: colors.primary.withValues(alpha: .22)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SlotGlyph(usb: card['usb'] == true),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    '${card['title']}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Icon(Icons.expand_more_rounded, color: colors.primary),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
+}
+
+class _SlotPainter extends CustomPainter {
+  const _SlotPainter(this.color, this.contacts);
+  final Color color, contacts;
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.scale(size.width / 32, size.height / 32);
+    final sim = Path()
+      ..moveTo(12, 6)
+      ..lineTo(22, 6)
+      ..quadraticBezierTo(24, 6, 24, 8)
+      ..lineTo(24, 25)
+      ..quadraticBezierTo(24, 27, 22, 27)
+      ..lineTo(10, 27)
+      ..quadraticBezierTo(8, 27, 8, 25)
+      ..lineTo(8, 10)
+      ..close();
+    canvas.drawPath(sim, Paint()..color = color);
+    for (var row = 0; row < 3; row++) {
+      for (var column = 0; column < 2; column++) {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(11 + column * 6, 12 + row * 4, 4, 2.8),
+            const Radius.circular(.6),
+          ),
+          Paint()..color = contacts,
+        );
+      }
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_SlotPainter old) =>
+      color != old.color || contacts != old.contacts;
+}
+
+Uint8List? profileIconBytes(String? encoded) {
+  if (encoded == null || encoded.isEmpty || encoded.length > 32768) return null;
+  try {
+    final bytes = base64Decode(encoded);
+    final png =
+        bytes.length >= 8 &&
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4e &&
+        bytes[3] == 0x47;
+    final jpeg =
+        bytes.length >= 3 &&
+        bytes[0] == 0xff &&
+        bytes[1] == 0xd8 &&
+        bytes[2] == 0xff;
+    return png || jpeg ? bytes : null;
+  } on FormatException {
+    return null;
+  }
+}
+
+class ProfileGlyph extends StatefulWidget {
+  const ProfileGlyph({super.key, required this.profile});
+  final Json profile;
+  @override
+  State<ProfileGlyph> createState() => _ProfileGlyphState();
+}
+
+class _ProfileGlyphState extends State<ProfileGlyph> {
+  Uint8List? bytes;
+  @override
+  void initState() {
+    super.initState();
+    bytes = profileIconBytes(widget.profile['icon'] as String?);
+  }
+
+  @override
+  void didUpdateWidget(ProfileGlyph old) {
+    super.didUpdateWidget(old);
+    if (old.profile['icon'] != widget.profile['icon']) {
+      bytes = profileIconBytes(widget.profile['icon'] as String?);
+    }
+  }
+
+  Widget fallback(BuildContext context) {
+    final profile = widget.profile;
+    final name = '${profile['name'] ?? profile['provider'] ?? ''}'.trim();
+    var hash = 2166136261;
+    for (final unit in utf8.encode('${profile['iccid'] ?? name}')) {
+      hash = ((hash ^ unit) * 16777619) & 0xffffffff;
+    }
+    final color = Color.lerp(
+      flowPurple,
+      const Color(0xFF456ABA),
+      (hash % 17) / 16,
+    )!;
+    return Container(
+      color: color,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            name.isEmpty ? 'e' : name.characters.first.toUpperCase(),
+            textScaler: TextScaler.noScaling,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < 6; i++)
+                Container(
+                  width: 3,
+                  height: 3,
+                  margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(
+                      alpha: (hash & (1 << i)) == 0 ? .3 : .95,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: SizedBox(
+      width: 54,
+      height: 54,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: bytes == null
+            ? fallback(context)
+            : ColoredBox(
+                color: Colors.white,
+                child: Image.memory(
+                  bytes!,
+                  fit: BoxFit.contain,
+                  cacheWidth: 128,
+                  cacheHeight: 128,
+                  errorBuilder: (context, error, stack) => fallback(context),
+                ),
+              ),
+      ),
+    ),
+  );
 }
 
 class StatePanel extends StatelessWidget {

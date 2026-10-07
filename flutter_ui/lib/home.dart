@@ -57,7 +57,6 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final card = controller.selected;
     final locked = controller.busy || controller.scanning || controller.reading;
-    final colors = Theme.of(context).colorScheme;
     return Column(
       children: [
         AppBar(
@@ -102,31 +101,44 @@ class HomePage extends StatelessWidget {
                 if (card != null) ...[
                   PopupMenuItem(
                     value: 'info',
-                    child: Text(context.s('euicc_info')),
+                    child: MenuLabel(
+                      icon: Icons.info_outline_rounded,
+                      label: context.s('euicc_info'),
+                    ),
                   ),
                   PopupMenuItem(
                     value: 'notifications',
-                    child: Text(context.s('profile_notifications_show')),
+                    child: MenuLabel(
+                      icon: Icons.notifications_none_rounded,
+                      label: context.s('profile_notifications_show'),
+                    ),
                   ),
                   if (card['toolkit'] == true)
                     PopupMenuItem(
                       value: 'toolkit',
-                      child: Text(context.s('open_sim_toolkit')),
+                      child: MenuLabel(
+                        icon: Icons.apps_rounded,
+                        label: context.s('open_sim_toolkit'),
+                      ),
                     ),
                   if (card['usb'] == true ||
                       controller.preferences['disableSafeguard'] == true)
                     PopupMenuItem(
                       value: 'reset',
-                      child: Text(
-                        context.s('euicc_memory_reset'),
-                        style: TextStyle(color: colors.error),
+                      child: MenuLabel(
+                        icon: Icons.restart_alt_rounded,
+                        label: context.s('euicc_memory_reset'),
+                        danger: true,
                       ),
                     ),
                   const PopupMenuDivider(),
                 ],
                 PopupMenuItem(
                   value: 'compatibility',
-                  child: Text(context.s('compatibility_check')),
+                  child: MenuLabel(
+                    icon: Icons.verified_outlined,
+                    label: context.s('compatibility_check'),
+                  ),
                 ),
               ],
             ),
@@ -162,64 +174,7 @@ class HomePage extends StatelessWidget {
                   const SizedBox(height: 18),
                 ],
                 if (card != null) ...[
-                  GlassPanel(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 6,
-                    ),
-                    child: Row(
-                      children: [
-                        const SimGlyph(size: 36),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: PopupMenuButton<int>(
-                            enabled: !locked,
-                            tooltip: context.s('download_wizard_slot_select'),
-                            onSelected: (index) =>
-                                controller.select(controller.cards[index]),
-                            itemBuilder: (_) => [
-                              for (var i = 0; i < controller.cards.length; i++)
-                                PopupMenuItem(
-                                  value: i,
-                                  child: ListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    title: Text(
-                                      '${controller.cards[i]['title']}',
-                                    ),
-                                    subtitle: Text(
-                                      '${controller.cards[i]['active'] ?? context.s('no_profile')}',
-                                    ),
-                                    trailing:
-                                        EuiccController.sameCard(
-                                          controller.cards[i],
-                                          card,
-                                        )
-                                        ? const Icon(Icons.check)
-                                        : null,
-                                  ),
-                                ),
-                            ],
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      '${card['title']}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium,
-                                    ),
-                                  ),
-                                  const Icon(Icons.expand_more),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  CardSelector(controller: controller, enabled: !locked),
                   const SizedBox(height: 22),
                 ],
                 if (controller.error != null)
@@ -271,7 +226,10 @@ class HomePage extends StatelessWidget {
                         context,
                         CompatibilityPage(controller: controller),
                       ),
-                      child: Text(context.s('compatibility_check')),
+                      child: MenuLabel(
+                        icon: Icons.verified_outlined,
+                        label: context.s('compatibility_check'),
+                      ),
                     ),
                   ),
                 if (card != null &&
@@ -375,7 +333,7 @@ class _ProfileCardState extends State<ProfileCard> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SimGlyph(active: active),
+                      ProfileGlyph(profile: p),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
@@ -403,23 +361,33 @@ class _ProfileCardState extends State<ProfileCard> {
                             PopupMenuItem(
                               value: 'enable',
                               enabled: p['canEnable'] == true,
-                              child: Text(context.s('profile_enable')),
+                              child: MenuLabel(
+                                icon: Icons.play_arrow_rounded,
+                                label: context.s('profile_enable'),
+                              ),
                             ),
                           if (active && p['canDisable'] == true)
                             PopupMenuItem(
                               value: 'disable',
-                              child: Text(context.s('profile_disable')),
+                              child: MenuLabel(
+                                icon: Icons.pause_rounded,
+                                label: context.s('profile_disable'),
+                              ),
                             ),
                           PopupMenuItem(
                             value: 'rename',
-                            child: Text(context.s('profile_rename')),
+                            child: MenuLabel(
+                              icon: Icons.edit_outlined,
+                              label: context.s('profile_rename'),
+                            ),
                           ),
                           if (!active)
                             PopupMenuItem(
                               value: 'delete',
-                              child: Text(
-                                context.s('profile_delete'),
-                                style: TextStyle(color: colors.error),
+                              child: MenuLabel(
+                                icon: Icons.delete_outline_rounded,
+                                label: context.s('profile_delete'),
+                                danger: true,
                               ),
                             ),
                         ],

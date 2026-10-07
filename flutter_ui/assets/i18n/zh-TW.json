@@ -279,5 +279,7 @@
   "ui_language": "語言",
   "ui_retry": "重試",
   "ui_copy": "複製",
-  "ui_save": "儲存"
+  "ui_save": "儲存",
+  "ui_code_hint": "貼上或輸入電信業者提供的啟用碼。",
+  "ui_manual_hint": "填寫 SM-DP+ 位址和啟用資訊。"
 }

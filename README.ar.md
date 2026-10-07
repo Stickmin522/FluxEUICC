@@ -38,7 +38,7 @@ FluxEUICC هو تطبيق Android لإدارة بطاقات eSIM القابلة 
 
 ## التنزيل والبدء
 
-الإصدار الحالي: **2.0**. نزّل ملف APK من [صفحة التنزيل](https://github.com/Stickmin522/FluxEUICC/releases/latest).
+الإصدار الحالي: **2.0.1**. نزّل ملف APK من [صفحة التنزيل](https://github.com/Stickmin522/FluxEUICC/releases/latest).
 
 1. ثبّت التطبيق على جهاز ARM ‏64 بت يعمل بنظام Android 9 أو أحدث.
 2. أدخل بطاقة eSIM قابلة للإزالة ومتوافقة مع OpenEUICC، أو وصّل قارئ USB متوافقًا.

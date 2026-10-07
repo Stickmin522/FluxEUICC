@@ -279,5 +279,7 @@
   "ui_language": "Idioma",
   "ui_retry": "Reintentar",
   "ui_copy": "Copiar",
-  "ui_save": "Guardar"
+  "ui_save": "Guardar",
+  "ui_code_hint": "Pega o escribe el código de activación de tu operador.",
+  "ui_manual_hint": "Introduce la dirección SM-DP+ y los datos de activación."
 }

@@ -25,6 +25,19 @@ TEXT = {
 }
 
 
+METHOD_HINTS = {
+    "en": ["Paste or type the activation code from your provider.", "Enter the SM-DP+ address and activation details."],
+    "zh-CN": ["粘贴或输入运营商提供的激活码。", "填写 SM-DP+ 地址和激活信息。"],
+    "zh-TW": ["貼上或輸入電信業者提供的啟用碼。", "填寫 SM-DP+ 位址和啟用資訊。"],
+    "ja": ["通信事業者のアクティベーションコードを貼り付けるか入力します。", "SM-DP+ アドレスとアクティベーション情報を入力します。"],
+    "ko": ["통신사에서 받은 활성화 코드를 붙여 넣거나 입력하세요.", "SM-DP+ 주소와 활성화 정보를 입력하세요."],
+    "ar": ["الصق رمز التفعيل المقدم من شركة الاتصالات أو أدخله.", "أدخل عنوان SM-DP+ وبيانات التفعيل."],
+    "fr": ["Collez ou saisissez le code d’activation fourni par votre opérateur.", "Saisissez l’adresse SM-DP+ et les informations d’activation."],
+    "de": ["Fügen Sie den Aktivierungscode Ihres Anbieters ein oder geben Sie ihn ein.", "Geben Sie die SM-DP+-Adresse und die Aktivierungsdaten ein."],
+    "es": ["Pega o escribe el código de activación de tu operador.", "Introduce la dirección SM-DP+ y los datos de activación."],
+}
+
+
 def read_values(directory):
     values = {}
     for module in ("app-common", "app-unpriv"):
@@ -44,5 +57,6 @@ if __name__ == "__main__":
     english = read_values("values")
     for language, directory in LANGUAGES.items():
         values = english | read_values(directory) | dict(zip(KEYS, TEXT[language]))
+        values |= dict(zip(["ui_code_hint", "ui_manual_hint"], METHOD_HINTS[language]))
         values = {key: re.sub(r"\besim\b", "eSIM", value, flags=re.I) for key, value in values.items()}
         (destination / f"{language}.json").write_text(json.dumps(values, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

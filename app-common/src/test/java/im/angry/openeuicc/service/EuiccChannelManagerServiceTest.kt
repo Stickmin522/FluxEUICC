@@ -25,6 +25,7 @@ import org.robolectric.Robolectric
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * Tests the real EuiccChannelManagerService (Robolectric) with only the manager /
@@ -76,7 +77,7 @@ class EuiccChannelManagerServiceTest {
     private suspend fun awaitTaskDone(
         handle: EuiccChannelManagerService.ForegroundTaskHandle
     ): ForegroundTaskState.Done = coroutineScope {
-        val states = mutableListOf<ForegroundTaskState>()
+        val states = CopyOnWriteArrayList<ForegroundTaskState>()
         val collector = async(Dispatchers.Default) { handle.stateFlow.collect { states += it } }
         try {
             awaitMainLooper {

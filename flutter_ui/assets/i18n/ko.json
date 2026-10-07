@@ -279,5 +279,7 @@
   "ui_language": "언어",
   "ui_retry": "다시 시도",
   "ui_copy": "복사",
-  "ui_save": "저장"
+  "ui_save": "저장",
+  "ui_code_hint": "통신사에서 받은 활성화 코드를 붙여 넣거나 입력하세요.",
+  "ui_manual_hint": "SM-DP+ 주소와 활성화 정보를 입력하세요."
 }

@@ -8,6 +8,20 @@ import 'controller.dart';
 import 'design.dart';
 import 'strings.dart';
 
+Future<void> _showDownloadDetails(
+  BuildContext context,
+  EuiccController controller,
+  String input,
+) => controller.guard(() async {
+  final parsed = json(await controller.invoke('parse', {'input': input}));
+  if (context.mounted) {
+    await openPage(
+      context,
+      DownloadDetailsPage(controller: controller, details: parsed),
+    );
+  }
+});
+
 class DownloadPage extends StatefulWidget {
   const DownloadPage({super.key, required this.controller, this.lpa});
   final EuiccController controller;
@@ -17,37 +31,27 @@ class DownloadPage extends StatefulWidget {
 }
 
 class _DownloadPageState extends State<DownloadPage> {
-  final code = TextEditingController();
   bool processing = false;
   @override
   void initState() {
     super.initState();
     if (widget.lpa != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _parse(widget.lpa!));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _parse(widget.lpa!);
+      });
     }
-  }
-
-  @override
-  void dispose() {
-    code.dispose();
-    super.dispose();
   }
 
   Future<void> _parse(String input) async {
     if (processing) return;
     setState(() => processing = true);
-    await widget.controller.guard(() async {
-      final parsed = json(
-        await widget.controller.invoke('parse', {'input': input}),
-      );
-      if (mounted) {
-        await openPage(
-          context,
-          DownloadDetailsPage(controller: widget.controller, details: parsed),
-        );
-      }
-    });
+    await _showDownloadDetails(context, widget.controller, input);
     if (mounted) setState(() => processing = false);
+  }
+
+  Future<void> _scan() async {
+    final value = await openPage<String>(context, const ScannerPage());
+    if (value != null && mounted) await _parse(value);
   }
 
   Future<void> _image() => widget.controller.guard(() async {
@@ -60,36 +64,18 @@ class _DownloadPageState extends State<DownloadPage> {
     animation: widget.controller,
     builder: (context, _) {
       final card = widget.controller.selected;
+      final locked =
+          processing ||
+          widget.controller.busy ||
+          widget.controller.scanning ||
+          widget.controller.reading;
       return FlowPage(
         title: context.s('home_add_profile'),
         body: ListView(
           padding: const EdgeInsets.all(24),
           children: [
-            if (widget.controller.cards.length > 1) ...[
-              GlassPanel(
-                padding: const EdgeInsets.all(12),
-                child: DropdownButtonFormField<int>(
-                  initialValue: widget.controller.cards.indexWhere(
-                    (value) => EuiccController.sameCard(card, value),
-                  ),
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: context.s('download_wizard_slot_select'),
-                  ),
-                  items: [
-                    for (var i = 0; i < widget.controller.cards.length; i++)
-                      DropdownMenuItem(
-                        value: i,
-                        child: Text('${widget.controller.cards[i]['title']}'),
-                      ),
-                  ],
-                  onChanged: widget.controller.busy
-                      ? null
-                      : (index) => widget.controller.select(
-                          widget.controller.cards[index!],
-                        ),
-                ),
-              ),
+            if (widget.controller.cards.length > 1 && card != null) ...[
+              CardSelector(controller: widget.controller, enabled: !locked),
               const SizedBox(height: 20),
             ],
             if (card == null)
@@ -106,119 +92,201 @@ class _DownloadPageState extends State<DownloadPage> {
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),
-              GlassPanel(
+              DownloadMethodCard(
+                icon: Icons.qr_code_scanner_rounded,
+                title: context.s('ui_scan'),
+                subtitle: context.s('download_wizard_method_qr_code'),
                 active: true,
-                onTap: processing || widget.controller.busy
-                    ? null
-                    : () async {
-                        final value = await openPage<String>(
-                          context,
-                          const ScannerPage(),
-                        );
-                        if (value != null && mounted) await _parse(value);
-                      },
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: flowPurple.withValues(alpha: .08),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.qr_code_scanner_rounded,
-                        color: flowPurple,
-                        size: 36,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      context.s('ui_scan'),
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      context.s('download_wizard_method_qr_code'),
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
+                onTap: locked ? null : _scan,
               ),
               const SizedBox(height: 16),
-              GlassPanel(
-                onTap: processing || widget.controller.busy ? null : _image,
-                child: Row(
-                  children: [
-                    const Icon(Icons.image_outlined, size: 30),
-                    const SizedBox(width: 18),
-                    Expanded(
-                      child: Text(
-                        context.s('ui_image'),
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right),
-                  ],
-                ),
+              DownloadMethodCard(
+                icon: Icons.image_outlined,
+                title: context.s('ui_image'),
+                subtitle: context.s('download_wizard_method_gallery'),
+                onTap: locked ? null : _image,
               ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: code,
-                minLines: 1,
-                maxLines: 4,
-                autocorrect: false,
-                enableSuggestions: false,
-                decoration: InputDecoration(
-                  labelText: context.s('profile_download_code'),
-                  hintText: 'LPA:1\$…',
-                  suffixIcon: IconButton(
-                    tooltip: context.s('download_wizard_method_clipboard'),
-                    icon: const Icon(Icons.content_paste_go_outlined),
-                    onPressed: () async {
-                      final clipboard = await Clipboard.getData(
-                        Clipboard.kTextPlain,
-                      );
-                      if (!mounted) return;
-                      if (clipboard?.text?.isNotEmpty == true) {
-                        code.text = clipboard!.text!;
-                        await _parse(code.text);
-                      } else {
-                        widget.controller.showMessage?.call(
-                          'profile_download_no_lpa_string',
-                        );
-                      }
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: TextButton.icon(
-                  onPressed: processing || widget.controller.busy
-                      ? null
-                      : () => openPage(
-                          context,
-                          DownloadDetailsPage(controller: widget.controller),
-                        ),
-                  icon: const Icon(Icons.edit_outlined),
-                  label: Text(context.s('ui_manual')),
-                ),
-              ),
-              const SizedBox(height: 30),
-              FlowButton(
-                label: context.s('ui_continue'),
-                onPressed: processing || widget.controller.busy
+              const SizedBox(height: 16),
+              DownloadMethodCard(
+                key: const Key('activation-code-option'),
+                icon: Icons.content_paste_go_outlined,
+                title: context.s('profile_download_code'),
+                subtitle: context.s('ui_code_hint'),
+                onTap: locked
                     ? null
-                    : () => _parse(code.text.trim()),
+                    : () => openPage(
+                        context,
+                        ActivationCodePage(controller: widget.controller),
+                      ),
+              ),
+              const SizedBox(height: 16),
+              DownloadMethodCard(
+                key: const Key('manual-input-option'),
+                icon: Icons.edit_outlined,
+                title: context.s('ui_manual'),
+                subtitle: context.s('ui_manual_hint'),
+                onTap: locked
+                    ? null
+                    : () => openPage(
+                        context,
+                        DownloadDetailsPage(controller: widget.controller),
+                      ),
               ),
             ],
           ],
         ),
       );
     },
+  );
+}
+
+class DownloadMethodCard extends StatelessWidget {
+  const DownloadMethodCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.onTap,
+    this.active = false,
+  });
+  final IconData icon;
+  final String title, subtitle;
+  final VoidCallback? onTap;
+  final bool active;
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return GlassPanel(
+      active: active,
+      onTap: onTap,
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(13),
+            decoration: BoxDecoration(
+              color: colors.primary.withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(icon, color: colors.primary, size: 26),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: colors.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(Icons.chevron_right_rounded, color: colors.primary),
+        ],
+      ),
+    );
+  }
+}
+
+class ActivationCodePage extends StatefulWidget {
+  const ActivationCodePage({super.key, required this.controller});
+  final EuiccController controller;
+  @override
+  State<ActivationCodePage> createState() => _ActivationCodePageState();
+}
+
+class _ActivationCodePageState extends State<ActivationCodePage> {
+  final code = TextEditingController();
+  final form = GlobalKey<FormState>();
+  bool processing = false;
+  @override
+  void dispose() {
+    code.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (processing ||
+        widget.controller.busy ||
+        !form.currentState!.validate()) {
+      return;
+    }
+    setState(() => processing = true);
+    await _showDownloadDetails(context, widget.controller, code.text.trim());
+    if (mounted) setState(() => processing = false);
+  }
+
+  Future<void> _paste() async {
+    final clipboard = await Clipboard.getData(Clipboard.kTextPlain);
+    if (!mounted) return;
+    if (clipboard?.text?.trim().isNotEmpty == true) {
+      code.text = clipboard!.text!.trim();
+      await _submit();
+    } else {
+      widget.controller.showMessage?.call('profile_download_no_lpa_string');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: widget.controller,
+    builder: (context, _) => FlowPage(
+      title: context.s('profile_download_code'),
+      body: Form(
+        key: form,
+        child: ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            GlassPanel(
+              child: Text(
+                context.s('ui_code_hint'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ),
+            const SizedBox(height: 24),
+            TextFormField(
+              controller: code,
+              minLines: 3,
+              maxLines: 6,
+              autocorrect: false,
+              enableSuggestions: false,
+              enabled: !processing && !widget.controller.busy,
+              decoration: InputDecoration(
+                labelText: context.s('profile_download_code'),
+                hintText: 'LPA:1\$…',
+              ),
+              validator: (value) => value?.trim().isNotEmpty == true
+                  ? null
+                  : context.s('profile_download_no_lpa_string'),
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: TextButton.icon(
+                onPressed: processing || widget.controller.busy ? null : _paste,
+                icon: const Icon(Icons.content_paste_go_outlined),
+                label: Text(context.s('download_wizard_method_clipboard')),
+              ),
+            ),
+            const SizedBox(height: 24),
+            FlowButton(
+              label: context.s('ui_continue'),
+              onPressed: processing || widget.controller.busy ? null : _submit,
+            ),
+          ],
+        ),
+      ),
+    ),
   );
 }
 

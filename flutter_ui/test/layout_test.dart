@@ -15,7 +15,7 @@ EuiccController fixture() {
   final controller = EuiccController();
   controller.loading = false;
   controller.configuration = {
-    'version': '2.0',
+    'version': '2.0.1',
     'fingerprint': '2C01AD79D81F67F34D0001979A4B41C9D1D35B78',
     'systemLocale': 'it-IT',
     'language': '',
@@ -38,7 +38,7 @@ EuiccController fixture() {
     'port': 0,
     'se': 0,
     'title': 'SIM 1',
-    'eid': '89049032000000000000000000000000',
+    'eid': '89049032000000001000000000000000',
     'freeSpace': '320 KiB',
   };
   controller.cards = [controller.selected!];
@@ -119,6 +119,8 @@ void main() {
         HomePage(controller: controller),
         SettingsPage(controller: controller),
         DownloadPage(controller: controller),
+        ActivationCodePage(controller: controller),
+        DownloadDetailsPage(controller: controller),
       ]) {
         await tester.pumpWidget(harness(page, locale));
         await tester.runAsync(() async {

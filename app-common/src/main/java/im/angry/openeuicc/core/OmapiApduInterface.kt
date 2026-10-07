@@ -30,6 +30,9 @@ class OmapiApduInterface(
     override val atr: ByteArray?
         get() = session.atr
 
+    val readerName: String
+        get() = session.reader.name
+
     override fun connect() {
         session = service.getUiccReaderCompat(port.logicalSlotIndex + 1).openSession()
     }

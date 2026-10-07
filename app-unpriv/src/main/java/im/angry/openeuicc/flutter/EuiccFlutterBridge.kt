@@ -15,6 +15,7 @@ import android.hardware.usb.UsbManager
 import android.os.Build
 import android.os.LocaleList
 import android.net.Uri
+import android.telephony.TelephonyManager
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
@@ -25,6 +26,7 @@ import androidx.lifecycle.lifecycleScope
 import im.angry.openeuicc.common.R
 import im.angry.openeuicc.core.EuiccChannel
 import im.angry.openeuicc.core.EuiccChannelManager
+import im.angry.openeuicc.core.OmapiApduInterface
 import im.angry.openeuicc.service.EuiccChannelManagerService
 import im.angry.openeuicc.ui.wizard.DownloadWizardLowPowerFragment
 import im.angry.openeuicc.ui.wizard.SimplifiedErrorMessages
@@ -329,26 +331,53 @@ class EuiccFlutterBridge(private val activity: FluxFlutterActivity) : EventChann
     private suspend fun cardData(channel: EuiccChannel, profiles: Boolean = false): Map<String, Any?> {
         val cardProfiles = channel.lpa.profiles
         val active = cardProfiles.enabled
+        val eid = channel.lpa.eID
+        val reader = (channel.apduInterface as? OmapiApduInterface)?.readerName
+        val systemSlot = if (reader != null) {
+            SimSlotResolver.resolve(reader, systemSimSlots(), eid, active?.iccid)
+        } else null
         val unfiltered = prefs.unfilteredProfileListFlow.first()
         val canDisable = channel.slotId == EuiccChannelManager.USB_CHANNEL_ID || prefs.disableSafeguardFlow.first()
-        val title = if (channel.slotId == EuiccChannelManager.USB_CHANNEL_ID) "USB" else "SIM ${channel.logicalSlotId + 1}"
+        val title = when {
+            channel.slotId == EuiccChannelManager.USB_CHANNEL_ID -> "USB"
+            systemSlot != null -> "SIM ${systemSlot + 1}"
+            else -> "eUICC"
+        }
         return buildMap {
             put("slot", channel.slotId); put("port", channel.portId); put("se", channel.seId.id)
             put("logicalSlot", channel.logicalSlotId)
+            put("systemSlot", systemSlot)
             put("title", title + if (channel.hasMultipleSE) " 路 SE ${channel.seId.id}" else "")
-            put("eid", channel.lpa.eID)
+            put("eid", eid)
             put("active", active?.displayName)
             put("freeSpace", channel.lpa.euiccInfo2?.freeNvram?.let(::formatFreeSpace))
             put("usb", channel.slotId == EuiccChannelManager.USB_CHANNEL_ID)
             put("toolkit", SIMToolkit(activity)[channel.slotId] != null)
             if (profiles) put("profiles", (if (unfiltered) cardProfiles else cardProfiles.operational).map { mapOf(
                 "iccid" to it.iccid, "name" to it.displayName, "provider" to it.providerName,
+                "icon" to it.icon,
                 "enabled" to it.isEnabled, "class" to it.profileClass.name,
                 "showClass" to unfiltered,
                 "canEnable" to (active == null || active.profileClass == it.profileClass),
                 "canDisable" to canDisable,
             ) })
         }
+    }
+
+    private fun systemSimSlots(): List<SystemSimSlot> {
+        if (Build.VERSION.SDK_INT < 29) return emptyList()
+        return runCatching {
+            activity.getSystemService(TelephonyManager::class.java).uiccCardsInfo.flatMap { card ->
+                if (Build.VERSION.SDK_INT >= 33) {
+                    card.ports.map { port ->
+                        SystemSimSlot(card.physicalSlotIndex, port.logicalSlotIndex.takeIf { port.isActive },
+                            card.eid, port.iccId)
+                    }.ifEmpty { listOf(SystemSimSlot(card.physicalSlotIndex, null, card.eid)) }
+                } else {
+                    listOf(SystemSimSlot(card.physicalSlotIndex, null, card.eid, card.iccId))
+                }
+            }
+        }.getOrDefault(emptyList())
     }
 
     private suspend fun startTask(args: Map<*, *>): Long {

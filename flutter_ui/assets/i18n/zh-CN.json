@@ -279,5 +279,7 @@
   "ui_language": "语言",
   "ui_retry": "重试",
   "ui_copy": "复制",
-  "ui_save": "保存"
+  "ui_save": "保存",
+  "ui_code_hint": "粘贴或输入运营商提供的激活码。",
+  "ui_manual_hint": "填写 SM-DP+ 地址和激活信息。"
 }

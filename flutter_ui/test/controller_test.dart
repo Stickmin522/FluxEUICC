@@ -43,7 +43,14 @@ void main() {
           return recover;
         case 'scan':
           return {
-            'cards': [{...card, 'profiles': [{'iccid': 'test', 'enabled': true}]}],
+            'cards': [
+              {
+                ...card,
+                'profiles': [
+                  {'iccid': 'test', 'enabled': true},
+                ],
+              },
+            ],
           };
         case 'profiles':
           return {

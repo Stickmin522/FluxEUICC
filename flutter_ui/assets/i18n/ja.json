@@ -279,5 +279,7 @@
   "ui_language": "言語",
   "ui_retry": "再試行",
   "ui_copy": "コピー",
-  "ui_save": "保存"
+  "ui_save": "保存",
+  "ui_code_hint": "通信事業者のアクティベーションコードを貼り付けるか入力します。",
+  "ui_manual_hint": "SM-DP+ アドレスとアクティベーション情報を入力します。"
 }

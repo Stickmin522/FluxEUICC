@@ -279,5 +279,7 @@
   "ui_language": "Language",
   "ui_retry": "Try again",
   "ui_copy": "Copy",
-  "ui_save": "Save"
+  "ui_save": "Save",
+  "ui_code_hint": "Paste or type the activation code from your provider.",
+  "ui_manual_hint": "Enter the SM-DP+ address and activation details."
 }

@@ -196,14 +196,20 @@ class _NotificationsPageState extends State<NotificationsPage> {
                               itemBuilder: (_) => [
                                 PopupMenuItem(
                                   value: false,
-                                  child: Text(
-                                    context.s('profile_notification_process'),
+                                  child: MenuLabel(
+                                    icon: Icons.send_outlined,
+                                    label: context.s(
+                                      'profile_notification_process',
+                                    ),
                                   ),
                                 ),
                                 PopupMenuItem(
                                   value: true,
-                                  child: Text(
-                                    context.s('profile_notification_delete'),
+                                  child: MenuLabel(
+                                    icon: Icons.delete_outline_rounded,
+                                    label: context.s(
+                                      'profile_notification_delete',
+                                    ),
                                   ),
                                 ),
                               ],

@@ -125,7 +125,8 @@ class LocalProfileAssistantImpl(
                     LpacJni.profileGetNickname(curr),
                     LpacJni.profileGetServiceProvider(curr),
                     LpacJni.profileGetIsdpAid(curr),
-                    clazz
+                    clazz,
+                    LpacJni.profileGetIcon(curr),
                 )
             }
         }

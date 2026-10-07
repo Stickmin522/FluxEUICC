@@ -7,7 +7,8 @@ data class LocalProfileInfo(
     val nickName: String,
     val providerName: String,
     val isdpAID: String,
-    val profileClass: ProfileClass
+    val profileClass: ProfileClass,
+    val icon: String = "",
 ) {
     enum class State {
         Enabled,

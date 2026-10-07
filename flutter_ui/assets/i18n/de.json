@@ -279,5 +279,7 @@
   "ui_language": "Sprache",
   "ui_retry": "Erneut versuchen",
   "ui_copy": "Kopieren",
-  "ui_save": "Speichern"
+  "ui_save": "Speichern",
+  "ui_code_hint": "Fügen Sie den Aktivierungscode Ihres Anbieters ein oder geben Sie ihn ein.",
+  "ui_manual_hint": "Geben Sie die SM-DP+-Adresse und die Aktivierungsdaten ein."
 }
