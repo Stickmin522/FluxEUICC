@@ -347,7 +347,7 @@ class EuiccFlutterBridge(private val activity: FluxFlutterActivity) : EventChann
             put("slot", channel.slotId); put("port", channel.portId); put("se", channel.seId.id)
             put("logicalSlot", channel.logicalSlotId)
             put("systemSlot", systemSlot)
-            put("title", title + if (channel.hasMultipleSE) " 路 SE ${channel.seId.id}" else "")
+            put("title", title + if (channel.hasMultipleSE) " · SE ${channel.seId.id}" else "")
             put("eid", eid)
             put("active", active?.displayName)
             put("freeSpace", channel.lpa.euiccInfo2?.freeNvram?.let(::formatFreeSpace))
