@@ -90,7 +90,13 @@ class LocalProfileAssistantImpl(
 
     init {
         try {
-            if (LpacJni.euiccInit(contextHandle) < 0) {
+            // A rejected reader/AID is a failed probe, not a failed slot scan.
+            val initResult = try {
+                LpacJni.euiccInit(contextHandle)
+            } catch (error: Exception) {
+                throw IllegalArgumentException("Failed to initialize LPA", error)
+            }
+            if (initResult < 0) {
                 throw IllegalArgumentException("Failed to initialize LPA")
             }
             val pkids = euiccInfo2?.euiccCiPKIdListForVerification ?: setOf()

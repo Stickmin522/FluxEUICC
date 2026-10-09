@@ -4,6 +4,8 @@ import org.junit.Assert.*
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
+import net.typeblog.lpac_jni.impl.LocalProfileAssistantImpl
+import java.io.IOException
 
 class NativeBridgeTest {
     @Before fun requireNativeLibrary() {
@@ -16,12 +18,16 @@ class NativeBridgeTest {
         var disconnected = 0
         var closed = 0
         var failOpen = false
+        var openFailure: Exception? = null
         var failure: RuntimeException? = null
         var respond: (ByteArray) -> ByteArray = { byteArrayOf(0x6a, 0x80.toByte()) }
         val commands = mutableListOf<ByteArray>()
         override fun connect() { connected++ }
         override fun disconnect() { disconnected++ }
-        override fun logicalChannelOpen(aid: ByteArray): Int = if (failOpen) -1 else 257
+        override fun logicalChannelOpen(aid: ByteArray): Int {
+            openFailure?.let { throw it }
+            return if (failOpen) -1 else 257
+        }
         override fun logicalChannelClose(handle: Int) { assertEquals(257, handle); closed++ }
         override fun transmit(handle: Int, tx: ByteArray): ByteArray {
             assertEquals(257, handle)
@@ -125,6 +131,47 @@ class NativeBridgeTest {
         try { LpacJni.euiccInit(handle); fail("closed context expected") } catch (_: IllegalStateException) { }
         val second = Card()
         context(second) { LpacJni.euiccFini(it); LpacJni.euiccFini(it) }
+    }
+
+    @Test fun initializationExceptionsAreProbeFailuresAndReleaseTheSession() {
+        for (failure in listOf(NoSuchElementException("No ISD-R"), SecurityException("Access denied"), IOException("Reader unavailable"))) {
+            val card = Card().apply { openFailure = failure }
+            try {
+                LocalProfileAssistantImpl(byteArrayOf(1), card, Server())
+                fail("initialization failure expected")
+            } catch (error: IllegalArgumentException) {
+                assertSame(failure, error.cause)
+            }
+            assertEquals(1, card.disconnected)
+            assertEquals(0, card.closed)
+            assertTrue(card.commands.isEmpty())
+        }
+    }
+
+    @Test fun rejectedSimProbeKeepsTheOtherCardReadable() {
+        val supported = Card().apply {
+            respond = { tx -> status(when (tx[6].toInt() and 255) {
+                0x22 -> tlv(0xbf22, listOf(0x81, 0x82, 0x83, 0x87, 0x04).fold(byteArrayOf()) { body, tag ->
+                    body + tlv(tag, byteArrayOf(2, 2, 2))
+                })
+                0x3e -> tlv(0xbf3e, tlv(0x5a, byteArrayOf(0x12, 0x34)))
+                else -> tlv(0xbf2d, tlv(0xa0, tlv(0xe3, tlv(0x5a, byteArrayOf(0x98.toByte(), 0x10)))))
+            }) }
+        }
+        val lpa = LocalProfileAssistantImpl(byteArrayOf(1), supported, Server())
+        try {
+            val ordinary = Card().apply { openFailure = NoSuchElementException("No ISD-R") }
+            try {
+                LocalProfileAssistantImpl(byteArrayOf(1), ordinary, Server())
+                fail("ordinary SIM must be rejected")
+            } catch (_: IllegalArgumentException) { }
+            assertEquals(1, ordinary.disconnected)
+            assertTrue(lpa.valid)
+            assertEquals("1234", lpa.eID)
+            assertEquals("8901", lpa.profiles.single().iccid)
+        } finally { lpa.close() }
+        assertEquals(1, supported.closed)
+        assertEquals(1, supported.disconnected)
     }
 
     @Test fun downloadCancellationAndCallbackExceptionsDoNotContinue() {

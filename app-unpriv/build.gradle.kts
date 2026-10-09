@@ -24,8 +24,8 @@ android {
 
     defaultConfig {
         applicationId = "dev.codex.esimmanager17"
-        versionCode = 2000000003
-        versionName = "2.0.3"
+        versionCode = 2000000004
+        versionName = "2.0.4"
         minSdk = 28
         targetSdk = 37
         ndk {
