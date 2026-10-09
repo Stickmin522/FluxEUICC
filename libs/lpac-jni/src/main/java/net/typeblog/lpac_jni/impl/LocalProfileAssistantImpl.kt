@@ -89,12 +89,24 @@ class LocalProfileAssistantImpl(
     private var contextHandle: Long = LpacJni.createContext(isdrAid, apduInterface, httpInterface)
 
     init {
-        if (LpacJni.euiccInit(contextHandle) < 0) {
-            throw IllegalArgumentException("Failed to initialize LPA")
+        try {
+            // A rejected reader/AID is a failed probe, not a failed slot scan.
+            val initResult = try {
+                LpacJni.euiccInit(contextHandle)
+            } catch (error: Exception) {
+                throw IllegalArgumentException("Failed to initialize LPA", error)
+            }
+            if (initResult < 0) {
+                throw IllegalArgumentException("Failed to initialize LPA")
+            }
+            val pkids = euiccInfo2?.euiccCiPKIdListForVerification ?: setOf()
+            httpInterface.usePublicKeyIds(pkids.toTypedArray())
+        } catch (error: Throwable) {
+            runCatching { LpacJni.destroyContext(contextHandle) }
+                .exceptionOrNull()?.let(error::addSuppressed)
+            finalized = true
+            throw error
         }
-
-        val pkids = euiccInfo2?.euiccCiPKIdListForVerification ?: setOf()
-        httpInterface.usePublicKeyIds(pkids.toTypedArray())
     }
 
     override fun setEs10xMss(mss: Byte) {
@@ -210,29 +222,32 @@ class LocalProfileAssistantImpl(
     }
 
     override fun downloadProfile(input: ProfileDownloadInput, callback: ProfileDownloadCallback) = lock.withLock {
-        val res = LpacJni.downloadProfile(
-            contextHandle,
-            input.address,
-            input.matchingId,
-            input.imei,
-            input.confirmationCode,
-            callback
-        )
-
-        if (res != 0) {
-            // Construct the error now to store any error information we _can_ access
-            val err = LocalProfileAssistant.ProfileDownloadException(
-                lpaErrorReason = LpacJni.downloadErrCodeToString(-res),
-                httpInterface.lastHttpResponse,
-                httpInterface.lastHttpException,
-                apduInterface.lastApduResponse,
-                apduInterface.lastApduException,
+        try {
+            val res = LpacJni.downloadProfile(
+                contextHandle,
+                input.address,
+                input.matchingId,
+                input.imei,
+                input.confirmationCode,
+                callback
             )
 
-            // Cancel sessions if possible. This will overwrite recorded errors from HTTP and APDU interfaces.
-            LpacJni.cancelSessions(contextHandle)
+            if (res != 0) {
+                // Construct the error now to store any error information we _can_ access
+                val err = LocalProfileAssistant.ProfileDownloadException(
+                    lpaErrorReason = LpacJni.downloadErrCodeToString(-res),
+                    httpInterface.lastHttpResponse,
+                    httpInterface.lastHttpException,
+                    apduInterface.lastApduResponse,
+                    apduInterface.lastApduException,
+                )
 
-            throw err
+                throw err
+            }
+        } catch (error: Throwable) {
+            runCatching { LpacJni.cancelSessions(contextHandle) }
+                .exceptionOrNull()?.let(error::addSuppressed)
+            throw error
         }
     }
 
@@ -272,9 +287,15 @@ class LocalProfileAssistantImpl(
 
     override fun close() = lock.withLock {
         if (!finalized) {
-            LpacJni.euiccFini(contextHandle)
-            LpacJni.destroyContext(contextHandle)
-            finalized = true
+            try {
+                LpacJni.euiccFini(contextHandle)
+            } finally {
+                try {
+                    LpacJni.destroyContext(contextHandle)
+                } finally {
+                    finalized = true
+                }
+            }
         }
     }
 }

@@ -50,11 +50,11 @@ open class DefaultEuiccChannelFactory(protected val context: Context) : EuiccCha
             context.preferenceRepository.httpProxyFlow,
             context.preferenceRepository.es10xMssFlow,
         )
-    } catch (_: IllegalArgumentException) {
+    } catch (error: IllegalArgumentException) {
         // Failed
         Log.w(
             DefaultEuiccChannelManager.TAG,
-            "OMAPI APDU interface unavailable for physical slot ${port.card.physicalSlotIndex} with ISD-R AID: ${isdrAid.encodeHex()}."
+            "OMAPI APDU interface unavailable for physical slot ${port.card.physicalSlotIndex} with ISD-R AID: ${isdrAid.encodeHex()} (${(error.cause ?: error).javaClass.simpleName})."
         )
         null
     }
