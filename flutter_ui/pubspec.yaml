@@ -1,7 +1,7 @@
 name: flutter_ui
 description: FluxEUICC Android interface.
 publish_to: none
-version: 2.0.2+2000000002
+version: 2.0.3+2000000003
 
 environment:
   sdk: ^3.13.5

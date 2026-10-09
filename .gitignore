@@ -26,3 +26,5 @@
 /libs/*/.cxx/
 *.apk
 *.log
+/.tooling/
+/libs/lpac-jni/rust/target/

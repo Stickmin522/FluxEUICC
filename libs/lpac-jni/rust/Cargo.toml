@@ -1,0 +1,22 @@
+[package]
+name = "flux-lpac-jni"
+version = "0.1.0"
+edition = "2021"
+license = "LGPL-2.1-only"
+
+[lib]
+name = "lpac_jni"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+jni = "=0.21.1"
+libc = "0.2"
+
+[build-dependencies]
+bindgen = "=0.71.1"
+cc = "1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "debuginfo"

@@ -20,15 +20,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        externalNativeBuild {
-            ndkBuild {
-                cFlags(
-                    "-fmacro-prefix-map=${project.projectDir}=/fake/path/",
-                    "-fdebug-prefix-map=${project.projectDir}=/fake/path/",
-                    "-ffile-prefix-map=${project.projectDir}=/fake/path/"
-                )
-            }
-        }
     }
 
     buildTypes {
@@ -44,10 +35,21 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
-    externalNativeBuild {
-        ndkBuild {
-            path("src/main/jni/lpac-jni.mk")
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.androidTest?.sources?.java?.addStaticSourceDirectory("src/test/java")
+        val rust = tasks.register<BuildRustJni>("build${variant.name.replaceFirstChar { it.uppercase() }}RustJni") {
+            cargoExecutable.set(providers.gradleProperty("cargoExecutable").orElse("cargo"))
+            targets.set(if (variant.buildType == "debug" && emulatorBuild) listOf("arm64-v8a", "x86_64") else listOf("arm64-v8a"))
+            crateDirectory.set(layout.projectDirectory.dir("rust"))
+            ndkDirectory.set(sdkComponents.ndkDirectory)
+            cargoBuildDirectory.set(layout.buildDirectory.dir("rust/${variant.name}"))
+            outputDirectory.set(layout.buildDirectory.dir("generated/jniLibs/${variant.name}"))
+            sources.from(fileTree("rust") { exclude("target/**") }, fileTree("src/main/jni") { include("**/*.c", "**/*.h") })
         }
+        variant.sources.jniLibs?.addGeneratedSourceDirectory(rust, BuildRustJni::outputDirectory)
     }
 }
 
@@ -64,4 +66,12 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+}
+
+tasks.withType<Test>().configureEach {
+    providers.gradleProperty("hostNativeLibraryDirectory").orNull?.let {
+        systemProperty("java.library.path", it)
+        systemProperty("lpac.native.tests", "true")
+        jvmArgs("-Xcheck:jni")
+    }
 }
