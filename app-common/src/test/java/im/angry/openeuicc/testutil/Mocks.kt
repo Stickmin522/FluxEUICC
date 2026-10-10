@@ -119,6 +119,8 @@ class MockLpa(
     var deleteResult = true
     var switchUpdatesProfile = true
     var refreshBusy = false
+    var disableResult = true
+    val profileOperations = mutableListOf<String>()
     var deleteCalls = 0
     var notificationFailures = 0
     var downloadNotification: LocalProfileNotification? = null
@@ -134,6 +136,8 @@ class MockLpa(
         return true
     }
     override fun disableProfile(iccid: String, refresh: Boolean): Boolean {
+        profileOperations += "disable:$iccid:$refresh"
+        if (!disableResult) return false
         if (refresh && refreshBusy) return false
         if (switchUpdatesProfile) profiles = profiles.map {
             if (it.iccid == iccid) it.copy(state = LocalProfileInfo.State.Disabled) else it
@@ -141,6 +145,7 @@ class MockLpa(
         return true
     }
     override fun deleteProfile(iccid: String): Boolean {
+        profileOperations += "delete:$iccid"
         deleteCalls++
         return deleteResult
     }

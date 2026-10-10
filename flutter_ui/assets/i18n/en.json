@@ -285,5 +285,12 @@
   "ui_change_icon": "Change icon",
   "ui_icon_gallery": "Choose from gallery",
   "ui_icon_camera": "Take a photo",
-  "ui_icon_reset": "Restore default icon"
+  "ui_icon_reset": "Restore default icon",
+  "ui_confirm": "Confirm",
+  "profile_switch": "Switch",
+  "profile_switch_confirm": "Switch from “%1$s” to “%2$s”?",
+  "profile_disable_confirm": "Disable “%s”?",
+  "profile_delete_question": "Delete “%s”? This cannot be undone.",
+  "profile_active_warning": "Disabling or deleting the active profile on a removable eSIM card may make the card inaccessible.",
+  "profile_state_changed": "The active profile has changed. Refresh the list and try again."
 }

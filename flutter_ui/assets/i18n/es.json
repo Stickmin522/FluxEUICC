@@ -285,5 +285,12 @@
   "ui_change_icon": "Cambiar icono",
   "ui_icon_gallery": "Elegir de la galería",
   "ui_icon_camera": "Tomar una foto",
-  "ui_icon_reset": "Restaurar el icono predeterminado"
+  "ui_icon_reset": "Restaurar el icono predeterminado",
+  "ui_confirm": "Confirmar",
+  "profile_switch": "Cambiar",
+  "profile_switch_confirm": "¿Cambiar de «%1$s» a «%2$s»?",
+  "profile_disable_confirm": "¿Desactivar «%s»?",
+  "profile_delete_question": "¿Eliminar «%s»? Esta acción no se puede deshacer.",
+  "profile_active_warning": "Desactivar o eliminar el perfil activo de una tarjeta eSIM extraíble puede impedir el acceso a la tarjeta.",
+  "profile_state_changed": "El perfil activo ha cambiado. Actualiza la lista e inténtalo de nuevo."
 }

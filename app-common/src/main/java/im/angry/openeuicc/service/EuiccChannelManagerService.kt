@@ -488,32 +488,87 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
         slotId: Int,
         portId: Int,
         seId: EuiccChannel.SecureElementId,
-        iccid: String
+        iccid: String,
+        allowActive: Boolean = false
     ): ForegroundTaskHandle =
         launchForegroundTask(
             getString(R.string.task_profile_delete),
             getString(R.string.task_profile_delete_failure),
             R.drawable.ic_task_delete
         ) { _ ->
+            var warning: Exception? = null
             runTrackedOperation(slotId, portId, seId) {
+                val active = euiccChannelManager.withEuiccChannel(slotId, portId, seId) { channel ->
+                    channel.lpa.profiles.find { it.iccid == iccid }?.isEnabled == true
+                }
+                if (active) {
+                    check(allowActive) { "Active profile deletion was not confirmed" }
+                    check(slotId == EuiccChannelManager.USB_CHANNEL_ID ||
+                        preferenceRepository.disableSafeguardFlow.first()) { "Active profile safeguard is enabled" }
+                    warning = switchProfileState(slotId, portId, seId, iccid, false, 30_000)
+                    check(warning !is SwitchingProfilesReconnectException) { "Card did not reconnect before deletion" }
+                }
                 euiccChannelManager.withEuiccChannel(slotId, portId, seId) { channel ->
+                    check(channel.lpa.profiles.find { it.iccid == iccid }?.isEnabled != true) {
+                        "Profile must be disabled before deletion"
+                    }
                     check(channel.lpa.deleteProfile(iccid)) { "Could not delete profile" }
                 }
-
-                preferenceRepository.notificationDeleteFlow.first()
+                preferenceRepository.notificationDeleteFlow.first() ||
+                    (active && preferenceRepository.notificationSwitchFlow.first())
             }
+            warning?.let { throw it }
         }
 
     class SwitchingProfilesRefreshException : Exception()
     class SwitchingProfilesReconnectException : Exception()
+
+    private suspend fun switchProfileState(
+        slotId: Int,
+        portId: Int,
+        seId: EuiccChannel.SecureElementId,
+        iccid: String,
+        enable: Boolean,
+        reconnectTimeoutMillis: Long
+    ): Exception? {
+        var warning: Exception? = null
+        val (response, refreshed) = euiccChannelManager.withEuiccChannel(slotId, portId, seId) { channel ->
+            val refresh = preferenceRepository.refreshAfterSwitchFlow.first()
+            val response = channel.lpa.switchProfile(iccid, enable, refresh)
+            if (response || !refresh) response to refresh
+            else channel.lpa.switchProfile(iccid, enable, refresh = false) to false
+        }
+        check(response) { "Could not switch profile" }
+        if (!refreshed && slotId != EuiccChannelManager.USB_CHANNEL_ID) {
+            warning = SwitchingProfilesRefreshException()
+        } else if (reconnectTimeoutMillis > 0) {
+            val initialDelay = if (slotId == EuiccChannelManager.USB_CHANNEL_ID) {
+                reconnectTimeoutMillis / 10
+            } else minOf(1_000L, reconnectTimeoutMillis / 10)
+            delay(initialDelay)
+            try {
+                euiccChannelManager.waitForReconnect(slotId, portId, reconnectTimeoutMillis - initialDelay)
+            } catch (_: TimeoutCancellationException) {
+                warning = SwitchingProfilesReconnectException()
+            }
+        }
+        if (warning !is SwitchingProfilesReconnectException) {
+            euiccChannelManager.withEuiccChannel(slotId, portId, seId) { channel ->
+                check(channel.lpa.profiles.find { it.iccid == iccid }?.isEnabled == enable) {
+                    "Profile state did not change"
+                }
+            }
+        }
+        return warning
+    }
 
     fun launchProfileSwitchTask(
         slotId: Int,
         portId: Int,
         seId: EuiccChannel.SecureElementId,
         iccid: String,
-        enable: Boolean, // Enable or disable the profile indicated in iccid
-        reconnectTimeoutMillis: Long = 0 // 0 = do not wait for reconnect
+        enable: Boolean,
+        reconnectTimeoutMillis: Long = 0
     ): ForegroundTaskHandle =
         launchForegroundTask(
             getString(R.string.task_profile_switch),
@@ -522,37 +577,7 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
         ) { _ ->
             var warning: Exception? = null
             runTrackedOperation(slotId, portId, seId) {
-                val (response, refreshed) = euiccChannelManager.withEuiccChannel(slotId, portId, seId) { channel ->
-                    val refresh = preferenceRepository.refreshAfterSwitchFlow.first()
-                    val response = channel.lpa.switchProfile(iccid, enable, refresh)
-                    if (response || !refresh) response to refresh
-                    else channel.lpa.switchProfile(iccid, enable, refresh = false) to false
-                }
-                check(response) { "Could not switch profile" }
-
-                if (!refreshed && slotId != EuiccChannelManager.USB_CHANNEL_ID) {
-                    warning = SwitchingProfilesRefreshException()
-                } else if (reconnectTimeoutMillis > 0) {
-                    val initialDelay = if (slotId == EuiccChannelManager.USB_CHANNEL_ID) {
-                        reconnectTimeoutMillis / 10
-                    } else {
-                        minOf(1_000L, reconnectTimeoutMillis / 10)
-                    }
-                    delay(initialDelay)
-                    try {
-                        euiccChannelManager.waitForReconnect(slotId, portId, reconnectTimeoutMillis - initialDelay)
-                    } catch (_: TimeoutCancellationException) {
-                        warning = SwitchingProfilesReconnectException()
-                    }
-                }
-
-                if (warning !is SwitchingProfilesReconnectException) {
-                    euiccChannelManager.withEuiccChannel(slotId, portId, seId) { channel ->
-                        check(channel.lpa.profiles.find { it.iccid == iccid }?.isEnabled == enable) {
-                            "Profile state did not change"
-                        }
-                    }
-                }
+                warning = switchProfileState(slotId, portId, seId, iccid, enable, reconnectTimeoutMillis)
                 preferenceRepository.notificationSwitchFlow.first()
             }
             warning?.let { throw it }

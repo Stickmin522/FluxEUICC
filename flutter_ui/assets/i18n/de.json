@@ -285,5 +285,12 @@
   "ui_change_icon": "Symbol ändern",
   "ui_icon_gallery": "Aus Galerie auswählen",
   "ui_icon_camera": "Foto aufnehmen",
-  "ui_icon_reset": "Standardsymbol wiederherstellen"
+  "ui_icon_reset": "Standardsymbol wiederherstellen",
+  "ui_confirm": "Bestätigen",
+  "profile_switch": "Wechseln",
+  "profile_switch_confirm": "Von „%1$s“ zu „%2$s“ wechseln?",
+  "profile_disable_confirm": "„%s“ deaktivieren?",
+  "profile_delete_question": "„%s“ löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+  "profile_active_warning": "Wenn das aktive Profil einer herausnehmbaren eSIM-Karte deaktiviert oder gelöscht wird, kann die Karte unzugänglich werden.",
+  "profile_state_changed": "Das aktive Profil hat sich geändert. Aktualisieren Sie die Liste und versuchen Sie es erneut."
 }

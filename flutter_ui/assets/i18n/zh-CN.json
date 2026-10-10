@@ -285,5 +285,12 @@
   "ui_change_icon": "更换图标",
   "ui_icon_gallery": "从图库选择",
   "ui_icon_camera": "拍摄照片",
-  "ui_icon_reset": "恢复默认图标"
+  "ui_icon_reset": "恢复默认图标",
+  "ui_confirm": "确认",
+  "profile_switch": "切换",
+  "profile_switch_confirm": "是否从“%1$s”切换为“%2$s”？",
+  "profile_disable_confirm": "是否禁用“%s”？",
+  "profile_delete_question": "是否删除“%s”？此操作无法撤销。",
+  "profile_active_warning": "禁用或删除可插拔 eSIM 卡中已启用的配置文件，可能导致卡片无法访问。",
+  "profile_state_changed": "已启用的配置文件发生变化，请刷新列表后重试。"
 }

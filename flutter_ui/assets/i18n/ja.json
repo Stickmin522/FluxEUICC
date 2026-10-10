@@ -285,5 +285,12 @@
   "ui_change_icon": "アイコンを変更",
   "ui_icon_gallery": "写真から選択",
   "ui_icon_camera": "写真を撮影",
-  "ui_icon_reset": "標準のアイコンに戻す"
+  "ui_icon_reset": "標準のアイコンに戻す",
+  "ui_confirm": "確認",
+  "profile_switch": "切り替え",
+  "profile_switch_confirm": "「%1$s」から「%2$s」に切り替えますか？",
+  "profile_disable_confirm": "「%s」を無効にしますか？",
+  "profile_delete_question": "「%s」を削除しますか？この操作は取り消せません。",
+  "profile_active_warning": "取り外し可能な eSIM カードで有効なプロファイルを無効化または削除すると、カードにアクセスできなくなる場合があります。",
+  "profile_state_changed": "有効なプロファイルが変更されました。一覧を更新して再度お試しください。"
 }

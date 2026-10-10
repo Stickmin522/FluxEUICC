@@ -6,6 +6,7 @@ import android.os.Looper
 import im.angry.openeuicc.core.EuiccChannel
 import im.angry.openeuicc.service.EuiccChannelManagerService.Companion.waitDone
 import im.angry.openeuicc.testutil.*
+import im.angry.openeuicc.util.preferenceRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
@@ -16,6 +17,7 @@ import net.typeblog.lpac_jni.ProfileClass
 import net.typeblog.lpac_jni.ProfileDownloadInput
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -37,6 +39,13 @@ class ServiceFailureTest {
         lpa = MockLpa()
         TestOpenEuiccApplication.mockEuiccChannelManager = MockEuiccChannelManager(MockEuiccChannel(1, 0, lpa))
         service = Robolectric.buildService(EuiccChannelManagerService::class.java).get()
+        resetPreferences()
+    }
+
+    @After
+    fun resetPreferences() = runBlocking {
+        service.preferenceRepository.disableSafeguardFlow.updatePreference(false)
+        service.preferenceRepository.refreshAfterSwitchFlow.updatePreference(true)
     }
 
     private fun startService() {
@@ -148,6 +157,56 @@ class ServiceFailureTest {
         startService()
         assertTrue(done(handle) is EuiccChannelManagerService.SwitchingProfilesRefreshException)
         assertEquals(LocalProfileInfo.State.Enabled, lpa.profiles.single().state)
+    }
+
+    private suspend fun activeDeletionAllowed() {
+        installProfile()
+        lpa.enableProfile("test-profile", false)
+        service.preferenceRepository.disableSafeguardFlow.updatePreference(true)
+        service.preferenceRepository.refreshAfterSwitchFlow.updatePreference(false)
+    }
+
+    @Test
+    fun confirmedActiveDeletionDisablesAndVerifiesBeforeDeleting() = runBlocking {
+        activeDeletionAllowed()
+        val handle = service.launchProfileDeleteTask(1, 0, seId, "test-profile", true)
+        startService()
+        assertTrue(done(handle) is EuiccChannelManagerService.SwitchingProfilesRefreshException)
+        assertEquals(listOf("disable:test-profile:false", "delete:test-profile"), lpa.profileOperations)
+    }
+
+    @Test
+    fun failedDisableDoesNotDeleteTheActiveProfile() = runBlocking {
+        activeDeletionAllowed()
+        lpa.disableResult = false
+        val handle = service.launchProfileDeleteTask(1, 0, seId, "test-profile", true)
+        startService()
+        assertTrue(done(handle) is IllegalStateException)
+        assertEquals(0, lpa.deleteCalls)
+    }
+
+    @Test
+    fun unchangedActiveStateDoesNotProceedToDeletion() = runBlocking {
+        activeDeletionAllowed()
+        lpa.switchUpdatesProfile = false
+        val handle = service.launchProfileDeleteTask(1, 0, seId, "test-profile", true)
+        startService()
+        assertTrue(done(handle) is IllegalStateException)
+        assertEquals(0, lpa.deleteCalls)
+    }
+
+    @Test
+    fun activeDeletionRequiresBothConfirmationAndSafeguardPermission() = runBlocking {
+        activeDeletionAllowed()
+        val unconfirmed = service.launchProfileDeleteTask(1, 0, seId, "test-profile")
+        startService()
+        assertTrue(done(unconfirmed) is IllegalStateException)
+        service.preferenceRepository.disableSafeguardFlow.updatePreference(false)
+        val guarded = service.launchProfileDeleteTask(1, 0, seId, "test-profile", true)
+        startService()
+        assertTrue(done(guarded) is IllegalStateException)
+        assertEquals(0, lpa.deleteCalls)
+        assertTrue(lpa.profileOperations.isEmpty())
     }
 
     class RejectingService : EuiccChannelManagerService() {

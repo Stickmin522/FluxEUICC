@@ -285,5 +285,12 @@
   "ui_change_icon": "تغيير الأيقونة",
   "ui_icon_gallery": "اختيار من المعرض",
   "ui_icon_camera": "التقاط صورة",
-  "ui_icon_reset": "استعادة الأيقونة الافتراضية"
+  "ui_icon_reset": "استعادة الأيقونة الافتراضية",
+  "ui_confirm": "تأكيد",
+  "profile_switch": "تبديل",
+  "profile_switch_confirm": "هل تريد التبديل من «%1$s» إلى «%2$s»؟",
+  "profile_disable_confirm": "هل تريد تعطيل «%s»؟",
+  "profile_delete_question": "هل تريد حذف «%s»؟ لا يمكن التراجع عن هذا الإجراء.",
+  "profile_active_warning": "قد يؤدي تعطيل الملف النشط أو حذفه على بطاقة eSIM قابلة للإزالة إلى تعذر الوصول إلى البطاقة.",
+  "profile_state_changed": "تغير الملف النشط. حدّث القائمة وحاول مرة أخرى."
 }

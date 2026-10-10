@@ -21,6 +21,22 @@ class EuiccController extends ChangeNotifier {
   void Function(Json)? onIntent;
 
   bool get busy => task?['running'] == true;
+  Json? get activeProfile =>
+      profiles.where((profile) => profile['enabled'] == true).firstOrNull;
+  List<Json> get displayProfiles {
+    final indexed = profiles.indexed.toList();
+    indexed.sort((a, b) {
+      final active =
+          (b.$2['enabled'] == true ? 1 : 0) - (a.$2['enabled'] == true ? 1 : 0);
+      if (active != 0) return active;
+      final order = ((a.$2['order'] as int?) ?? a.$1).compareTo(
+        (b.$2['order'] as int?) ?? b.$1,
+      );
+      return order == 0 ? a.$1.compareTo(b.$1) : order;
+    });
+    return indexed.map((entry) => entry.$2).toList();
+  }
+
   Json get cardArgs => selected == null
       ? {}
       : {

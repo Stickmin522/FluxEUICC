@@ -51,6 +51,46 @@ ICON_TEXT = {
 }
 
 
+PROFILE_ACTION_KEYS = ["ui_confirm", "profile_switch", "profile_switch_confirm",
+    "profile_disable_confirm", "profile_delete_question", "profile_active_warning", "profile_state_changed"]
+PROFILE_ACTION_TEXT = {
+    "en": ["Confirm", "Switch", "Switch from “%1$s” to “%2$s”?", "Disable “%s”?",
+        "Delete “%s”? This cannot be undone.",
+        "Disabling or deleting the active profile on a removable eSIM card may make the card inaccessible.",
+        "The active profile has changed. Refresh the list and try again."],
+    "zh-CN": ["确认", "切换", "是否从“%1$s”切换为“%2$s”？", "是否禁用“%s”？",
+        "是否删除“%s”？此操作无法撤销。", "禁用或删除可插拔 eSIM 卡中已启用的配置文件，可能导致卡片无法访问。",
+        "已启用的配置文件发生变化，请刷新列表后重试。"],
+    "zh-TW": ["確認", "切換", "是否從「%1$s」切換為「%2$s」？", "是否停用「%s」？",
+        "是否刪除「%s」？此操作無法復原。", "停用或刪除可插拔 eSIM 卡中已啟用的設定檔，可能導致卡片無法存取。",
+        "已啟用的設定檔已變更，請重新整理清單後再試。"],
+    "ja": ["確認", "切り替え", "「%1$s」から「%2$s」に切り替えますか？", "「%s」を無効にしますか？",
+        "「%s」を削除しますか？この操作は取り消せません。",
+        "取り外し可能な eSIM カードで有効なプロファイルを無効化または削除すると、カードにアクセスできなくなる場合があります。",
+        "有効なプロファイルが変更されました。一覧を更新して再度お試しください。"],
+    "ko": ["확인", "전환", "“%1$s”에서 “%2$s”(으)로 전환할까요?", "“%s”을(를) 비활성화할까요?",
+        "“%s”을(를) 삭제할까요? 이 작업은 되돌릴 수 없습니다.",
+        "탈착식 eSIM 카드에서 활성화된 프로필을 비활성화하거나 삭제하면 카드에 접근할 수 없게 될 수 있습니다.",
+        "활성 프로필이 변경되었습니다. 목록을 새로고침한 후 다시 시도하세요."],
+    "ar": ["تأكيد", "تبديل", "هل تريد التبديل من «%1$s» إلى «%2$s»؟", "هل تريد تعطيل «%s»؟",
+        "هل تريد حذف «%s»؟ لا يمكن التراجع عن هذا الإجراء.",
+        "قد يؤدي تعطيل الملف النشط أو حذفه على بطاقة eSIM قابلة للإزالة إلى تعذر الوصول إلى البطاقة.",
+        "تغير الملف النشط. حدّث القائمة وحاول مرة أخرى."],
+    "fr": ["Confirmer", "Basculer", "Passer de « %1$s » à « %2$s » ?", "Désactiver « %s » ?",
+        "Supprimer « %s » ? Cette action est irréversible.",
+        "La désactivation ou la suppression du profil actif sur une carte eSIM amovible peut rendre la carte inaccessible.",
+        "Le profil actif a changé. Actualisez la liste et réessayez."],
+    "de": ["Bestätigen", "Wechseln", "Von „%1$s“ zu „%2$s“ wechseln?", "„%s“ deaktivieren?",
+        "„%s“ löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+        "Wenn das aktive Profil einer herausnehmbaren eSIM-Karte deaktiviert oder gelöscht wird, kann die Karte unzugänglich werden.",
+        "Das aktive Profil hat sich geändert. Aktualisieren Sie die Liste und versuchen Sie es erneut."],
+    "es": ["Confirmar", "Cambiar", "¿Cambiar de «%1$s» a «%2$s»?", "¿Desactivar «%s»?",
+        "¿Eliminar «%s»? Esta acción no se puede deshacer.",
+        "Desactivar o eliminar el perfil activo de una tarjeta eSIM extraíble puede impedir el acceso a la tarjeta.",
+        "El perfil activo ha cambiado. Actualiza la lista e inténtalo de nuevo."],
+}
+
+
 def read_values(directory):
     values = {}
     for module in ("app-common", "app-unpriv"):
@@ -72,5 +112,6 @@ if __name__ == "__main__":
         values = english | read_values(directory) | dict(zip(KEYS, TEXT[language]))
         values |= dict(zip(["ui_code_hint", "ui_manual_hint"], METHOD_HINTS[language]))
         values |= dict(zip(["ui_change_icon", "ui_icon_gallery", "ui_icon_camera", "ui_icon_reset"], ICON_TEXT[language]))
+        values |= dict(zip(PROFILE_ACTION_KEYS, PROFILE_ACTION_TEXT[language]))
         values = {key: re.sub(r"\besim\b", "eSIM", value, flags=re.I) for key, value in values.items()}
         (destination / f"{language}.json").write_text(json.dumps(values, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

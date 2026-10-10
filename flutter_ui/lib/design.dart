@@ -163,16 +163,33 @@ class GlassPanel extends StatelessWidget {
 }
 
 class FlowButton extends StatelessWidget {
-  const FlowButton({super.key, required this.label, this.icon, this.onPressed});
+  const FlowButton({
+    super.key,
+    required this.label,
+    this.icon,
+    this.onPressed,
+    this.neutral = false,
+    this.compact = false,
+  });
   final String label;
   final IconData? icon;
   final VoidCallback? onPressed;
+  final bool neutral, compact;
   @override
   Widget build(BuildContext context) => DecoratedBox(
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(32),
       gradient: LinearGradient(
-        colors: onPressed == null
+        colors: neutral
+            ? [
+                Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade700
+                    : Colors.grey.shade300,
+                Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade700
+                    : Colors.grey.shade300,
+              ]
+            : onPressed == null
             ? [Colors.grey.shade400, Colors.grey.shade400]
             : const [Color(0xFF9668FF), Color(0xFF6C6BF5), flowBlue],
       ),
@@ -184,10 +201,14 @@ class FlowButton extends StatelessWidget {
       child: InkWell(
         onTap: onPressed,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 60),
+          constraints: BoxConstraints(minHeight: compact ? 48 : 60),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 20 : 24,
+              vertical: compact ? 12 : 16,
+            ),
             child: Row(
+              mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (icon != null) ...[
@@ -198,9 +219,11 @@ class FlowButton extends StatelessWidget {
                   child: Text(
                     label,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
+                    style: TextStyle(
+                      color: neutral
+                          ? Theme.of(context).colorScheme.onSurface
+                          : Colors.white,
+                      fontSize: compact ? 16 : 18,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -446,8 +469,9 @@ Uint8List? profileIconBytes(String? encoded) {
 }
 
 class ProfileGlyph extends StatefulWidget {
-  const ProfileGlyph({super.key, required this.profile});
+  const ProfileGlyph({super.key, required this.profile, this.size = 54});
   final Json profile;
+  final double size;
   @override
   State<ProfileGlyph> createState() => _ProfileGlyphState();
 }
@@ -493,8 +517,8 @@ class _ProfileGlyphState extends State<ProfileGlyph> {
           Text(
             name.isEmpty ? 'e' : name.characters.first.toUpperCase(),
             textScaler: TextScaler.noScaling,
-            style: const TextStyle(
-              fontSize: 28,
+            style: TextStyle(
+              fontSize: widget.size * 28 / 54,
               fontWeight: FontWeight.w700,
               color: Colors.white,
             ),
@@ -523,28 +547,92 @@ class _ProfileGlyphState extends State<ProfileGlyph> {
   }
 
   @override
-  Widget build(BuildContext context) => ExcludeSemantics(
-    child: SizedBox(
-      width: 54,
-      height: 54,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(15),
-        child: bytes == null
-            ? fallback(context)
-            : ColoredBox(
-                color: Colors.white,
-                child: Image.memory(
-                  bytes!,
-                  fit: BoxFit.contain,
-                  cacheWidth: 128,
-                  cacheHeight: 128,
-                  errorBuilder: (context, error, stack) => fallback(context),
+  Widget build(BuildContext context) {
+    final image = bytes == null
+        ? fallback(context)
+        : ColoredBox(
+            color: Colors.white,
+            child: Image.memory(
+              bytes!,
+              fit: BoxFit.contain,
+              cacheWidth: 128,
+              cacheHeight: 128,
+              errorBuilder: (context, error, stack) => fallback(context),
+            ),
+          );
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: widget.profile['enabled'] == true
+              ? image
+              : ColorFiltered(
+                  colorFilter: const ColorFilter.matrix([
+                    .2126,
+                    .7152,
+                    .0722,
+                    0,
+                    0,
+                    .2126,
+                    .7152,
+                    .0722,
+                    0,
+                    0,
+                    .2126,
+                    .7152,
+                    .0722,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                  ]),
+                  child: image,
                 ),
-              ),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
+
+Future<bool> confirmProfileAction(
+  BuildContext context,
+  String title,
+  String message, {
+  bool emphasizeCancel = false,
+}) async =>
+    await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        scrollable: true,
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          if (emphasizeCancel)
+            FlowButton(
+              label: context.s('ui_cancel'),
+              compact: true,
+              onPressed: () => Navigator.pop(dialog, false),
+            )
+          else
+            TextButton(
+              onPressed: () => Navigator.pop(dialog, false),
+              child: Text(context.s('ui_cancel')),
+            ),
+          FlowButton(
+            label: context.s('ui_confirm'),
+            compact: true,
+            neutral: emphasizeCancel,
+            onPressed: () => Navigator.pop(dialog, true),
+          ),
+        ],
+      ),
+    ) ??
+    false;
 
 class StatePanel extends StatelessWidget {
   const StatePanel({

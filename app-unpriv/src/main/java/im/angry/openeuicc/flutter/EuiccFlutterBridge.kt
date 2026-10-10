@@ -64,6 +64,7 @@ class EuiccFlutterBridge(private val activity: FluxFlutterActivity) : EventChann
     private var iconResult: CompletableDeferred<String?>? = null
     private var cameraPermissionResult: CompletableDeferred<Boolean>? = null
     private val profileIcons = ProfileIconStore(activity)
+    private val profileOrder = ProfileOrderStore(activity)
     private val iconPicker = activity.registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         val pending = iconResult ?: return@registerForActivityResult
         scope.launch {
@@ -359,6 +360,7 @@ class EuiccFlutterBridge(private val activity: FluxFlutterActivity) : EventChann
         val cardProfiles = channel.lpa.profiles
         val active = cardProfiles.enabled
         val eid = channel.lpa.eID
+        val order = if (profiles) profileOrder.reconcile(eid, cardProfiles.map { it.iccid }) else emptyMap()
         val reader = (channel.apduInterface as? OmapiApduInterface)?.readerName
         val systemSlot = SimSlotResolver.readerSlot(reader)
         val physicalSlot = if (reader != null) {
@@ -386,6 +388,7 @@ class EuiccFlutterBridge(private val activity: FluxFlutterActivity) : EventChann
                 "iccid" to it.iccid, "name" to it.displayName, "provider" to it.providerName,
                 "icon" to it.icon,
                 "customIcon" to profileIcons.get(eid, it.iccid),
+                "order" to order[it.iccid],
                 "enabled" to it.isEnabled, "class" to it.profileClass.name,
                 "showClass" to unfiltered,
                 "canEnable" to (active == null || active.profileClass == it.profileClass),
@@ -471,6 +474,10 @@ class EuiccFlutterBridge(private val activity: FluxFlutterActivity) : EventChann
                 withCard(args) { channel ->
                     val profiles = channel.lpa.profiles
                     val profile = profiles.find { it.iccid == iccid } ?: throw BridgeFailure("download_wizard_slot_removed")
+                    if (args.containsKey("expectedActive") && args["expectedActive"] != (profiles.enabled?.iccid ?: ""))
+                        throw BridgeFailure("profile_state_changed")
+                    if (args["eid"] != null && args["eid"] != channel.lpa.eID)
+                        throw BridgeFailure("download_wizard_slot_removed")
                     if (enable && profiles.enabled?.let { it.profileClass != profile.profileClass } == true)
                         throw BridgeFailure("toast_profile_enable_cross_class")
                     if (!enable && slot != EuiccChannelManager.USB_CHANNEL_ID && !prefs.disableSafeguardFlow.first())
@@ -482,10 +489,16 @@ class EuiccFlutterBridge(private val activity: FluxFlutterActivity) : EventChann
             "delete" -> {
                 withCard(args) { channel ->
                     val profile = channel.lpa.profiles.find { it.iccid == iccid } ?: throw BridgeFailure("download_wizard_slot_removed")
-                    if (profile.isEnabled || args["confirmation"] != profile.displayName)
+                    if (args["eid"] != null && args["eid"] != channel.lpa.eID)
+                        throw BridgeFailure("download_wizard_slot_removed")
+                    if (args["confirmation"] != profile.displayName)
                         throw BridgeFailure("toast_profile_delete_confirm_text_mismatched")
+                    if (profile.isEnabled && args["activeConfirmed"] != true)
+                        throw BridgeFailure("profile_state_changed")
+                    if (profile.isEnabled && slot != EuiccChannelManager.USB_CHANNEL_ID && !prefs.disableSafeguardFlow.first())
+                        throw BridgeFailure("safeguard_enabled")
                 }
-                service.launchProfileDeleteTask(slot, port, se, iccid)
+                service.launchProfileDeleteTask(slot, port, se, iccid, args["activeConfirmed"] == true)
             }
             "reset" -> {
                 withCard(args) { channel ->
