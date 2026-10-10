@@ -176,6 +176,14 @@ void main() {
         expect(button(tester, 'Cancel').neutral, false);
         expect(button(tester, 'Confirm').neutral, true);
         expect(button(tester, 'Confirm').onPressed, isNotNull);
+        expect(
+          tester.getCenter(find.text('Cancel')).dx,
+          greaterThan(tester.getCenter(find.text('Confirm')).dx),
+        );
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+        expect(calls, isEmpty);
+        await menu(tester, 0, action);
         await tester.tap(find.text('Confirm'));
         await tester.pump();
         expect(

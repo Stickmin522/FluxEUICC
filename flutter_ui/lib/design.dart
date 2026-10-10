@@ -607,30 +607,30 @@ Future<bool> confirmProfileAction(
 }) async =>
     await showDialog<bool>(
       context: context,
-      builder: (dialog) => AlertDialog(
-        scrollable: true,
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          if (emphasizeCancel)
-            FlowButton(
-              label: context.s('ui_cancel'),
-              compact: true,
-              onPressed: () => Navigator.pop(dialog, false),
-            )
-          else
-            TextButton(
-              onPressed: () => Navigator.pop(dialog, false),
-              child: Text(context.s('ui_cancel')),
-            ),
-          FlowButton(
-            label: context.s('ui_confirm'),
-            compact: true,
-            neutral: emphasizeCancel,
-            onPressed: () => Navigator.pop(dialog, true),
-          ),
-        ],
-      ),
+      builder: (dialog) {
+        final cancel = emphasizeCancel
+            ? FlowButton(
+                label: context.s('ui_cancel'),
+                compact: true,
+                onPressed: () => Navigator.pop(dialog, false),
+              )
+            : TextButton(
+                onPressed: () => Navigator.pop(dialog, false),
+                child: Text(context.s('ui_cancel')),
+              );
+        final confirm = FlowButton(
+          label: context.s('ui_confirm'),
+          compact: true,
+          neutral: emphasizeCancel,
+          onPressed: () => Navigator.pop(dialog, true),
+        );
+        return AlertDialog(
+          scrollable: true,
+          title: Text(title),
+          content: Text(message),
+          actions: emphasizeCancel ? [confirm, cancel] : [cancel, confirm],
+        );
+      },
     ) ??
     false;
 
